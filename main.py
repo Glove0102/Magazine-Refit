@@ -30,7 +30,7 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
         try:
             # Try to download from Object Storage
             print(f"📥 Downloading '{input_path}' from Object Storage...")
-            pdf_data = storage_client.download_from_bytes(input_path)
+            pdf_data = storage_client.download_to_bytes(input_path)
         except Exception as e:
             print(f"❌ Error: The file '{input_path}' was not found in local storage or Object Storage. Error: {e}")
             return
