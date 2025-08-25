@@ -205,11 +205,19 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
                     font_file_to_use = regular_font
                     font_name_for_pdf = "china-font-regular"
                 
-                # Don't cover the original text with a background rectangle
-                # This preserves background images and graphics
-                # The translated text will overlay directly on top
+                # Step 1: Draw a white/light background rectangle to cover the original text
+                # Expand the rectangle slightly to ensure full coverage
+                cover_rect = fitz.Rect(
+                    segment['rect'].x0 - 1,  # Slightly expand left
+                    segment['rect'].y0 - 1,  # Slightly expand top
+                    segment['rect'].x1 + 1,  # Slightly expand right
+                    segment['rect'].y1 + 1   # Slightly expand bottom
+                )
                 
-                # Normalize color values to 0-1 range and ensure visible color
+                # Draw white rectangle to cover original text
+                new_page.draw_rect(cover_rect, color=None, fill=(1, 1, 1))  # White fill
+                
+                # Step 2: Normalize color values to 0-1 range and ensure visible color
                 original_color = segment['color']
                 if isinstance(original_color, int):
                     # Convert integer color to RGB tuple (0-1 range)
@@ -235,12 +243,12 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
                     normalized_color = (0, 0, 0)  # Use black instead
                     print(f"      - Changed white/light text to black for visibility")
                 
-                # Insert the translated text with automatic resizing
+                # Step 3: Insert the translated text with better font sizing
                 text_inserted = False
                 original_font_size = segment['size']
                 
-                # Try progressively smaller font sizes until text fits
-                for font_scale in [1.0, 0.9, 0.8, 0.7, 0.6, 0.5]:
+                # Start with larger font sizes and work down - be less aggressive with shrinking
+                for font_scale in [1.2, 1.0, 0.9, 0.8, 0.7, 0.6]:
                     try:
                         scaled_font_size = original_font_size * font_scale
                         
@@ -255,7 +263,7 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
                         )
                         
                         if result > 0:  # Successful insertion
-                            if font_scale < 1.0:
+                            if font_scale != 1.0:
                                 print(f"      - Text inserted with {int(font_scale*100)}% font size for segment {i}")
                             text_inserted = True
                             break
@@ -266,7 +274,7 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
                     except Exception as text_error:
                         continue  # Try next font scale
                 
-                # If textbox insertion failed, try simple text insertion
+                # If textbox insertion failed, try simple text insertion with better sizing
                 if not text_inserted:
                     try:
                         # Calculate position for simple text insertion
@@ -278,7 +286,7 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
                             translated_text,
                             fontname=font_name_for_pdf,
                             fontfile=font_file_to_use,
-                            fontsize=original_font_size * 0.6,  # Use smaller font for fallback
+                            fontsize=original_font_size * 0.8,  # Less aggressive shrinking for fallback
                             color=normalized_color
                         )
                         print(f"      - Used fallback text insertion for segment {i}")
@@ -289,7 +297,10 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
                         print(f"        Translation: '{translated_text[:30]}...'")
                 
                 if text_inserted:
-                    print(f"      - Successfully inserted text for segment {i}")
+                    if segment['is_bold']:
+                        print(f"      - Successfully inserted BOLD text for segment {i}")
+                    else:
+                        print(f"      - Successfully inserted text for segment {i}")
                 else:
                     print(f"      - Failed to insert text for segment {i} - skipping")
             except Exception as e:
