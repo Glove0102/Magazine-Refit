@@ -5,9 +5,9 @@ from replit.object_storage import Client
 
 # --- Configuration ---
 # 1. Name of the PDF you want to translate
-input_pdf = "my_magazine.pdf"
+input_pdf = "0723.pdf.pdf"
 # 2. Name for the new, translated PDF
-output_pdf = "my_magazine_chinese_updated.pdf"
+output_pdf = "0723zh.pdf"
 # 3. Name of the REGULAR font file
 font_path_regular = "NotoSansSC-Regular.ttf" 
 # 4. Name of the BOLD font file
