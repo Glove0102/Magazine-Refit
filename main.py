@@ -186,8 +186,9 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
                     font_file_to_use = regular_font
                     font_name_for_pdf = "china-font-regular"
                 
-                # Cover the original text with white background
-                new_page.draw_rect(segment['rect'], color=(1, 1, 1), fill=(1, 1, 1), overlay=True)
+                # Don't cover the original text with a background rectangle
+                # This preserves background images and graphics
+                # The translated text will overlay directly on top
                 
                 # Normalize color values to 0-1 range and ensure visible color
                 original_color = segment['color']
