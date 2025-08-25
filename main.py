@@ -1,6 +1,7 @@
 import fitz  # PyMuPDF
 import translators as ts
 import os
+from replit.object_storage import Client
 
 # --- Configuration ---
 # 1. Name of the PDF you want to translate
@@ -16,10 +17,23 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
     """
     Translates PDF text, preserving color and bolding.
     """
-    # Check for necessary files
-    if not os.path.exists(input_path):
-        print(f"❌ Error: The file '{input_path}' was not found.")
-        return
+    # Initialize Object Storage client
+    storage_client = Client()
+    
+    # Check if PDF exists in Object Storage or local filesystem
+    pdf_data = None
+    if os.path.exists(input_path):
+        # Read from local file
+        with open(input_path, 'rb') as f:
+            pdf_data = f.read()
+    else:
+        try:
+            # Try to download from Object Storage
+            print(f"📥 Downloading '{input_path}' from Object Storage...")
+            pdf_data = storage_client.download_from_bytes(input_path)
+        except Exception as e:
+            print(f"❌ Error: The file '{input_path}' was not found in local storage or Object Storage. Error: {e}")
+            return
     if not os.path.exists(regular_font):
         print(f"❌ Error: Regular font '{regular_font}' not found.")
         return
@@ -29,7 +43,7 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
         bold_font = regular_font
 
     print(f"📖 Opening '{input_path}'...")
-    original_doc = fitz.open(input_path)
+    original_doc = fitz.open(stream=pdf_data, filetype="pdf")
     new_doc = fitz.open()
 
     print("🚀 Starting translation process with bold detection...")
@@ -82,8 +96,13 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
                                 print(f"      - Could not translate text: '{original_text}'. Error: {e}")
     try:
         print(f"💾 Saving translated PDF as '{output_path}'...")
+        # Save to local file first
         new_doc.save(output_path, garbage=4, deflate=True, clean=True)
-        print("✅ Translation complete!")
+        
+        # Also upload to Object Storage for persistence
+        print(f"☁️ Uploading to Object Storage...")
+        storage_client.upload_from_file(output_path, output_path)
+        print("✅ Translation complete! PDF saved locally and uploaded to Object Storage.")
     except Exception as e:
         print(f"❌ Error saving PDF: {e}")
     finally:
