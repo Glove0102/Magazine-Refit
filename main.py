@@ -52,7 +52,7 @@ Return format: {{"0": "translated text 1", "1": "translated text 2", ...}}"""
                 {"role": "system", "content": "You are a helpful assistant that translates text to Simplified Chinese. Always respond with valid JSON."},
                 {"role": "user", "content": prompt}
             ],
-            max_completion_tokens=4000,
+            max_completion_tokens=5000,
             response_format={"type": "json_object"}
         )
         
