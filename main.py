@@ -82,6 +82,27 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
 
                                 new_page.draw_rect(rect, color=(1, 1, 1), fill=(1, 1, 1), overlay=True)
 
+                                # Normalize color values to 0-1 range
+                                original_color = span["color"]
+                                if isinstance(original_color, int):
+                                    # Convert integer color to RGB tuple (0-1 range)
+                                    r = ((original_color >> 16) & 255) / 255.0
+                                    g = ((original_color >> 8) & 255) / 255.0
+                                    b = (original_color & 255) / 255.0
+                                    normalized_color = (r, g, b)
+                                elif isinstance(original_color, (list, tuple)):
+                                    # Ensure color components are in 0-1 range
+                                    if len(original_color) >= 3:
+                                        # Check if values are in 0-255 range and normalize
+                                        if any(c > 1.0 for c in original_color[:3]):
+                                            normalized_color = tuple(c / 255.0 for c in original_color[:3])
+                                        else:
+                                            normalized_color = tuple(original_color[:3])
+                                    else:
+                                        normalized_color = (0, 0, 0)  # Default to black
+                                else:
+                                    normalized_color = (0, 0, 0)  # Default to black
+
                                 # Insert text using the chosen font
                                 new_page.insert_textbox(
                                     rect,
@@ -89,7 +110,7 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
                                     fontname=font_name_for_pdf,  # Use the selected font name
                                     fontfile=font_file_to_use, # Use the selected font file
                                     fontsize=span["size"],
-                                    color=span["color"],
+                                    color=normalized_color,
                                     align=fitz.TEXT_ALIGN_LEFT
                                 )
                             except Exception as e:
