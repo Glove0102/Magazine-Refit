@@ -186,10 +186,10 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
                     font_file_to_use = regular_font
                     font_name_for_pdf = "china-font-regular"
                 
-                # Cover the original text
+                # Cover the original text with white background
                 new_page.draw_rect(segment['rect'], color=(1, 1, 1), fill=(1, 1, 1), overlay=True)
                 
-                # Normalize color values to 0-1 range
+                # Normalize color values to 0-1 range and ensure visible color
                 original_color = segment['color']
                 if isinstance(original_color, int):
                     # Convert integer color to RGB tuple (0-1 range)
@@ -210,16 +210,43 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
                 else:
                     normalized_color = (0, 0, 0)  # Default to black
                 
+                # Ensure the color is not white or too light (which would be invisible on white background)
+                if sum(normalized_color) > 2.7:  # If color is very light/white
+                    normalized_color = (0, 0, 0)  # Use black instead
+                    print(f"      - Changed white/light text to black for visibility")
+                
                 # Insert the translated text
-                new_page.insert_textbox(
-                    segment['rect'],
-                    translated_text,
-                    fontname=font_name_for_pdf,
-                    fontfile=font_file_to_use,
-                    fontsize=segment['size'],
-                    color=normalized_color,
-                    align=fitz.TEXT_ALIGN_LEFT
-                )
+                try:
+                    result = new_page.insert_textbox(
+                        segment['rect'],
+                        translated_text,
+                        fontname=font_name_for_pdf,
+                        fontfile=font_file_to_use,
+                        fontsize=segment['size'],
+                        color=normalized_color,
+                        align=fitz.TEXT_ALIGN_LEFT
+                    )
+                    # Debug: check if text insertion was successful
+                    if result < 0:
+                        print(f"      - Warning: Text insertion failed for segment {i}, result: {result}")
+                        print(f"        Original: '{segment['text'][:30]}...'")
+                        print(f"        Translation: '{translated_text[:30]}...'")
+                except Exception as text_error:
+                    print(f"      - Error inserting text for segment {i}: {text_error}")
+                    print(f"        Original: '{segment['text'][:30]}...'")
+                    print(f"        Translation: '{translated_text[:30]}...'")
+                    # Fallback: try with a simpler approach
+                    try:
+                        new_page.insert_text(
+                            (segment['rect'].x0, segment['rect'].y0 + segment['size']),
+                            translated_text,
+                            fontname=font_name_for_pdf,
+                            fontfile=font_file_to_use,
+                            fontsize=segment['size'],
+                            color=normalized_color
+                        )
+                    except Exception as fallback_error:
+                        print(f"      - Fallback text insertion also failed: {fallback_error}")
             except Exception as e:
                 print(f"      - Could not process segment {i}: '{segment['text'][:30]}...'. Error: {e}")
         
