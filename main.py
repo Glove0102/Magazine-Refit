@@ -32,8 +32,7 @@ def translate_with_openai(text):
                 {"role": "system", "content": "You are a helpful assistant that translates text to Simplified Chinese."},
                 {"role": "user", "content": f"Translate the following text to Simplified Chinese: \"{text}\""}
             ],
-            temperature=0.3, # Lower temperature for more deterministic translations
-            max_tokens=1000 # Adjust as needed
+            max_completion_tokens=2500 # Adjust as needed
         )
         translated_text = response.choices[0].message.content.strip()
         return translated_text
