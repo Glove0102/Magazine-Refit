@@ -149,7 +149,26 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
                                 'size': span["size"]
                             })
         
+        print(f"      - Total text segments found: {len(text_segments)}")
+        
         if not text_segments:
+            print(f"      - No text segments found on this page, creating empty translated page...")
+            # Still need to save the page even if it has no text to translate
+            try:
+                page_filename = f"page_{page_num + 1:03d}.pdf"
+                page_path = os.path.join(output_dir, page_filename)
+                single_page_doc.save(page_path, garbage=4, deflate=True, clean=True)
+                print(f"      ✅ Saved: {page_path}")
+                
+                # Also upload this page to Object Storage
+                with open(page_path, 'rb') as f:
+                    storage_page_path = f"{output_dir}/{page_filename}"
+                    storage_client.upload_from_bytes(storage_page_path, f.read())
+                    
+            except Exception as e:
+                print(f"      ❌ Error saving empty page {page_num + 1}: {e}")
+            finally:
+                single_page_doc.close()
             continue
             
         print(f"      - Found {len(text_segments)} text segments, translating in batch...")
