@@ -111,13 +111,23 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
 
     print(f"📖 Opening '{input_path}'...")
     original_doc = fitz.open(stream=pdf_data, filetype="pdf")
-    new_doc = fitz.open()
+
+    # Create output directory based on input filename
+    base_name = os.path.splitext(input_path)[0]  # Remove extension
+    output_dir = base_name
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        print(f"📁 Created output directory: {output_dir}")
 
     print("🚀 Starting translation process with bold detection...")
+    print(f"📄 Each page will be saved as a separate PDF in '{output_dir}/' folder")
 
     for page_num, page in enumerate(original_doc):
         print(f"    -> Processing page {page_num + 1}/{len(original_doc)}...")
-        new_page = new_doc.new_page(width=page.rect.width, height=page.rect.height)
+        
+        # Create a new document for this single page
+        single_page_doc = fitz.open()
+        new_page = single_page_doc.new_page(width=page.rect.width, height=page.rect.height)
         new_page.show_pdf_page(new_page.rect, original_doc, page_num)
 
         # Step 1: Collect all text segments from the page
@@ -212,21 +222,26 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
                 )
             except Exception as e:
                 print(f"      - Could not process segment {i}: '{segment['text'][:30]}...'. Error: {e}")
-    try:
-        print(f"💾 Saving translated PDF as '{output_path}'...")
-        # Save to local file first
-        new_doc.save(output_path, garbage=4, deflate=True, clean=True)
-
-        # Also upload to Object Storage for persistence
-        print(f"☁️ Uploading to Object Storage...")
-        with open(output_path, 'rb') as f:
-            storage_client.upload_from_bytes(output_path, f.read())
-        print("✅ Translation complete! PDF saved locally and uploaded to Object Storage.")
-    except Exception as e:
-        print(f"❌ Error saving PDF: {e}")
-    finally:
-        original_doc.close()
-        new_doc.close()
+        
+        # Save this single page as its own PDF
+        try:
+            page_filename = f"page_{page_num + 1:03d}.pdf"
+            page_path = os.path.join(output_dir, page_filename)
+            single_page_doc.save(page_path, garbage=4, deflate=True, clean=True)
+            print(f"      ✅ Saved: {page_path}")
+            
+            # Also upload this page to Object Storage
+            with open(page_path, 'rb') as f:
+                storage_page_path = f"{output_dir}/{page_filename}"
+                storage_client.upload_from_bytes(storage_page_path, f.read())
+                
+        except Exception as e:
+            print(f"      ❌ Error saving page {page_num + 1}: {e}")
+        finally:
+            single_page_doc.close()
+    print(f"✅ Translation complete! All pages saved individually in '{output_dir}/' folder")
+    print(f"📁 Check the '{output_dir}' directory to see pages 1-{len(original_doc)}")
+    original_doc.close()
 
 # --- Run the script ---
 if __name__ == "__main__":
