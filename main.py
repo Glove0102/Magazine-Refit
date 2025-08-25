@@ -1,6 +1,7 @@
 import fitz  # PyMuPDF
-import translators as ts
 import os
+import time
+from openai import OpenAI
 from replit.object_storage import Client
 
 # --- Configuration ---
@@ -9,9 +10,36 @@ input_pdf = "0723.pdf.pdf"
 # 2. Name for the new, translated PDF
 output_pdf = "0723zh.pdf"
 # 3. Name of the REGULAR font file
-font_path_regular = "NotoSansSC-Regular.ttf" 
+font_path_regular = "NotoSansSC-Regular.ttf"
 # 4. Name of the BOLD font file
 font_path_bold = "NotoSansSC-Bold.ttf"
+
+# --- OpenAI Configuration ---
+# Initialize the OpenAI client
+# It's recommended to set your API key as an environment variable or use Replit secrets.
+# Example: client = OpenAI(api_key="YOUR_API_KEY")
+# If OPENAI_API_KEY is set as a secret in Replit, this will automatically use it.
+client = OpenAI()
+
+def translate_with_openai(text):
+    """
+    Translates text using OpenAI's GPT model.
+    """
+    try:
+        response = client.chat.completions.create(
+            model="gpt-5-mini-2025-08-07",  # Specify the model as requested
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that translates text to Simplified Chinese."},
+                {"role": "user", "content": f"Translate the following text to Simplified Chinese: \"{text}\""}
+            ],
+            temperature=0.3, # Lower temperature for more deterministic translations
+            max_tokens=1000 # Adjust as needed
+        )
+        translated_text = response.choices[0].message.content.strip()
+        return translated_text
+    except Exception as e:
+        print(f"      - OpenAI translation failed for '{text[:30]}...': {e}")
+        return None
 
 def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font):
     """
@@ -19,7 +47,7 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
     """
     # Initialize Object Storage client
     storage_client = Client()
-    
+
     # Check if PDF exists in Object Storage or local filesystem
     pdf_data = None
     if os.path.exists(input_path):
@@ -76,9 +104,17 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
                             # --- END OF NEW LOGIC ---
 
                             try:
-                                translated_text = ts.translate_text(
-                                    original_text, translator='google', to_language='zh-CN'
-                                )
+                                # Skip very short or non-meaningful text
+                                if len(original_text.strip()) < 2:
+                                    continue
+
+                                # Use OpenAI for translation
+                                translated_text = translate_with_openai(original_text)
+
+                                # If translation failed, skip this text
+                                if translated_text is None:
+                                    print(f"      - Skipping translation for: '{original_text[:30]}...'")
+                                    continue
 
                                 new_page.draw_rect(rect, color=(1, 1, 1), fill=(1, 1, 1), overlay=True)
 
@@ -114,12 +150,12 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
                                     align=fitz.TEXT_ALIGN_LEFT
                                 )
                             except Exception as e:
-                                print(f"      - Could not translate text: '{original_text}'. Error: {e}")
+                                print(f"      - Could not process span: '{original_text}'. Error: {e}")
     try:
         print(f"💾 Saving translated PDF as '{output_path}'...")
         # Save to local file first
         new_doc.save(output_path, garbage=4, deflate=True, clean=True)
-        
+
         # Also upload to Object Storage for persistence
         print(f"☁️ Uploading to Object Storage...")
         with open(output_path, 'rb') as f:
