@@ -52,14 +52,30 @@ Return format: {{"0": "translated text 1", "1": "translated text 2", ...}}"""
                 {"role": "system", "content": "You are a helpful assistant that translates text to Simplified Chinese. Always respond with valid JSON."},
                 {"role": "user", "content": prompt}
             ],
-            max_completion_tokens=5000,
+            max_completion_tokens=16000,  # Increased significantly for large batches
             response_format={"type": "json_object"}
         )
         
         import json
-        translations = json.loads(response.choices[0].message.content)
+        response_content = response.choices[0].message.content
+        
+        # Debug: print response length and preview
+        print(f"      - API response length: {len(response_content) if response_content else 0}")
+        if not response_content:
+            print("      - Empty response from OpenAI API - likely token limit exceeded")
+            return {}
+            
+        if len(response_content) < 100:
+            print(f"      - Short response content: {response_content}")
+        
+        translations = json.loads(response_content)
+        print(f"      - Successfully parsed {len(translations)} translations")
         return translations
         
+    except json.JSONDecodeError as e:
+        print(f"      - JSON decode error: {e}")
+        print(f"      - Response content preview: {response.choices[0].message.content[:200] if response.choices[0].message.content else 'None'}")
+        return {}
     except Exception as e:
         print(f"      - Batch OpenAI translation failed: {e}")
         return {}
@@ -128,8 +144,20 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
             
         print(f"      - Found {len(text_segments)} text segments, translating in batch...")
         
-        # Step 2: Translate all text segments in one API call
-        translations = translate_batch_with_openai(text_segments)
+        # Step 2: Translate text segments in batches (limit batch size to prevent token overflow)
+        batch_size = 50  # Limit batch size to prevent token issues
+        all_translations = {}
+        
+        for i in range(0, len(text_segments), batch_size):
+            batch = text_segments[i:i+batch_size]
+            print(f"      - Translating batch {i//batch_size + 1} ({len(batch)} segments)...")
+            batch_translations = translate_batch_with_openai(batch)
+            
+            # Adjust indices for the overall segment list
+            for key, value in batch_translations.items():
+                all_translations[str(int(key) + i)] = value
+        
+        translations = all_translations
         
         # Step 3: Apply translations to the page
         for i, segment in enumerate(text_segments):
