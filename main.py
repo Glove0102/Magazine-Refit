@@ -215,38 +215,63 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
                     normalized_color = (0, 0, 0)  # Use black instead
                     print(f"      - Changed white/light text to black for visibility")
                 
-                # Insert the translated text
-                try:
-                    result = new_page.insert_textbox(
-                        segment['rect'],
-                        translated_text,
-                        fontname=font_name_for_pdf,
-                        fontfile=font_file_to_use,
-                        fontsize=segment['size'],
-                        color=normalized_color,
-                        align=fitz.TEXT_ALIGN_LEFT
-                    )
-                    # Debug: check if text insertion was successful
-                    if result < 0:
-                        print(f"      - Warning: Text insertion failed for segment {i}, result: {result}")
-                        print(f"        Original: '{segment['text'][:30]}...'")
-                        print(f"        Translation: '{translated_text[:30]}...'")
-                except Exception as text_error:
-                    print(f"      - Error inserting text for segment {i}: {text_error}")
-                    print(f"        Original: '{segment['text'][:30]}...'")
-                    print(f"        Translation: '{translated_text[:30]}...'")
-                    # Fallback: try with a simpler approach
+                # Insert the translated text with automatic resizing
+                text_inserted = False
+                original_font_size = segment['size']
+                
+                # Try progressively smaller font sizes until text fits
+                for font_scale in [1.0, 0.9, 0.8, 0.7, 0.6, 0.5]:
                     try:
-                        new_page.insert_text(
-                            (segment['rect'].x0, segment['rect'].y0 + segment['size']),
+                        scaled_font_size = original_font_size * font_scale
+                        
+                        result = new_page.insert_textbox(
+                            segment['rect'],
                             translated_text,
                             fontname=font_name_for_pdf,
                             fontfile=font_file_to_use,
-                            fontsize=segment['size'],
+                            fontsize=scaled_font_size,
+                            color=normalized_color,
+                            align=fitz.TEXT_ALIGN_LEFT
+                        )
+                        
+                        if result > 0:  # Successful insertion
+                            if font_scale < 1.0:
+                                print(f"      - Text inserted with {int(font_scale*100)}% font size for segment {i}")
+                            text_inserted = True
+                            break
+                        elif result == 0:  # Text fits exactly
+                            text_inserted = True
+                            break
+                            
+                    except Exception as text_error:
+                        continue  # Try next font scale
+                
+                # If textbox insertion failed, try simple text insertion
+                if not text_inserted:
+                    try:
+                        # Calculate position for simple text insertion
+                        text_x = segment['rect'].x0
+                        text_y = segment['rect'].y0 + (segment['rect'].height * 0.8)  # Position text better within rect
+                        
+                        new_page.insert_text(
+                            (text_x, text_y),
+                            translated_text,
+                            fontname=font_name_for_pdf,
+                            fontfile=font_file_to_use,
+                            fontsize=original_font_size * 0.6,  # Use smaller font for fallback
                             color=normalized_color
                         )
+                        print(f"      - Used fallback text insertion for segment {i}")
+                        text_inserted = True
                     except Exception as fallback_error:
-                        print(f"      - Fallback text insertion also failed: {fallback_error}")
+                        print(f"      - All text insertion methods failed for segment {i}: {fallback_error}")
+                        print(f"        Original: '{segment['text'][:30]}...'")
+                        print(f"        Translation: '{translated_text[:30]}...'")
+                
+                if text_inserted:
+                    print(f"      - Successfully inserted text for segment {i}")
+                else:
+                    print(f"      - Failed to insert text for segment {i} - skipping")
             except Exception as e:
                 print(f"      - Could not process segment {i}: '{segment['text'][:30]}...'. Error: {e}")
         
