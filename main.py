@@ -21,24 +21,48 @@ font_path_bold = "NotoSansSC-Bold.ttf"
 # If OPENAI_API_KEY is set as a secret in Replit, this will automatically use it.
 client = OpenAI()
 
-def translate_with_openai(text):
+def translate_batch_with_openai(text_segments):
     """
-    Translates text using OpenAI's GPT model.
+    Translates multiple text segments in one API call using JSON format.
     """
     try:
+        # Create a list of texts with IDs for mapping back
+        texts_to_translate = []
+        for i, segment in enumerate(text_segments):
+            if len(segment['text'].strip()) >= 2:  # Only include meaningful text
+                texts_to_translate.append({
+                    "id": i,
+                    "text": segment['text']
+                })
+        
+        if not texts_to_translate:
+            return {}
+        
+        # Create the prompt for batch translation
+        prompt = f"""Translate the following texts to Simplified Chinese. Return the result as a JSON object where each key is the "id" and the value is the translated text.
+
+Input texts:
+{texts_to_translate}
+
+Return format: {{"0": "translated text 1", "1": "translated text 2", ...}}"""
+        
         response = client.chat.completions.create(
-            model="gpt-5-mini-2025-08-07",  # Specify the model as requested
+            model="gpt-5-mini-2025-08-07",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant that translates text to Simplified Chinese."},
-                {"role": "user", "content": f"Translate the following text to Simplified Chinese: \"{text}\""}
+                {"role": "system", "content": "You are a helpful assistant that translates text to Simplified Chinese. Always respond with valid JSON."},
+                {"role": "user", "content": prompt}
             ],
-            max_completion_tokens=2500 # Adjust as needed
+            max_completion_tokens=4000,
+            response_format={"type": "json_object"}
         )
-        translated_text = response.choices[0].message.content.strip()
-        return translated_text
+        
+        import json
+        translations = json.loads(response.choices[0].message.content)
+        return translations
+        
     except Exception as e:
-        print(f"      - OpenAI translation failed for '{text[:30]}...': {e}")
-        return None
+        print(f"      - Batch OpenAI translation failed: {e}")
+        return {}
 
 def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font):
     """
@@ -80,76 +104,86 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
         new_page = new_doc.new_page(width=page.rect.width, height=page.rect.height)
         new_page.show_pdf_page(new_page.rect, original_doc, page_num)
 
+        # Step 1: Collect all text segments from the page
+        text_segments = []
         text_blocks = page.get_text("dict")["blocks"]
+        
         for block in text_blocks:
             if "lines" in block:
                 for line in block["lines"]:
                     for span in line["spans"]:
                         original_text = span["text"].strip()
-                        rect = fitz.Rect(span["bbox"])
-
-                        if original_text:
-                            # --- NEW: BOLD DETECTION LOGIC ---
-                            # PyMuPDF uses a flag system. Flag '16' (2**4) means bold.
-                            is_bold = span['flags'] & 16
-
-                            # Choose the font file and a unique name for embedding in the PDF
-                            if is_bold:
-                                font_file_to_use = bold_font
-                                font_name_for_pdf = "china-font-bold"
-                            else:
-                                font_file_to_use = regular_font
-                                font_name_for_pdf = "china-font-regular"
-                            # --- END OF NEW LOGIC ---
-
-                            try:
-                                # Skip very short or non-meaningful text
-                                if len(original_text.strip()) < 2:
-                                    continue
-
-                                # Use OpenAI for translation
-                                translated_text = translate_with_openai(original_text)
-
-                                # If translation failed, skip this text
-                                if translated_text is None:
-                                    print(f"      - Skipping translation for: '{original_text[:30]}...'")
-                                    continue
-
-                                new_page.draw_rect(rect, color=(1, 1, 1), fill=(1, 1, 1), overlay=True)
-
-                                # Normalize color values to 0-1 range
-                                original_color = span["color"]
-                                if isinstance(original_color, int):
-                                    # Convert integer color to RGB tuple (0-1 range)
-                                    r = ((original_color >> 16) & 255) / 255.0
-                                    g = ((original_color >> 8) & 255) / 255.0
-                                    b = (original_color & 255) / 255.0
-                                    normalized_color = (r, g, b)
-                                elif isinstance(original_color, (list, tuple)):
-                                    # Ensure color components are in 0-1 range
-                                    if len(original_color) >= 3:
-                                        # Check if values are in 0-255 range and normalize
-                                        if any(c > 1.0 for c in original_color[:3]):
-                                            normalized_color = tuple(c / 255.0 for c in original_color[:3])
-                                        else:
-                                            normalized_color = tuple(original_color[:3])
-                                    else:
-                                        normalized_color = (0, 0, 0)  # Default to black
-                                else:
-                                    normalized_color = (0, 0, 0)  # Default to black
-
-                                # Insert text using the chosen font
-                                new_page.insert_textbox(
-                                    rect,
-                                    translated_text,
-                                    fontname=font_name_for_pdf,  # Use the selected font name
-                                    fontfile=font_file_to_use, # Use the selected font file
-                                    fontsize=span["size"],
-                                    color=normalized_color,
-                                    align=fitz.TEXT_ALIGN_LEFT
-                                )
-                            except Exception as e:
-                                print(f"      - Could not process span: '{original_text}'. Error: {e}")
+                        if original_text and len(original_text.strip()) >= 2:
+                            # Store all the span information we need
+                            text_segments.append({
+                                'text': original_text,
+                                'rect': fitz.Rect(span["bbox"]),
+                                'is_bold': span['flags'] & 16,
+                                'color': span["color"],
+                                'size': span["size"]
+                            })
+        
+        if not text_segments:
+            continue
+            
+        print(f"      - Found {len(text_segments)} text segments, translating in batch...")
+        
+        # Step 2: Translate all text segments in one API call
+        translations = translate_batch_with_openai(text_segments)
+        
+        # Step 3: Apply translations to the page
+        for i, segment in enumerate(text_segments):
+            try:
+                # Get the translation for this segment
+                translated_text = translations.get(str(i))
+                if not translated_text:
+                    print(f"      - No translation found for segment {i}: '{segment['text'][:30]}...'")
+                    continue
+                
+                # Choose the font based on boldness
+                if segment['is_bold']:
+                    font_file_to_use = bold_font
+                    font_name_for_pdf = "china-font-bold"
+                else:
+                    font_file_to_use = regular_font
+                    font_name_for_pdf = "china-font-regular"
+                
+                # Cover the original text
+                new_page.draw_rect(segment['rect'], color=(1, 1, 1), fill=(1, 1, 1), overlay=True)
+                
+                # Normalize color values to 0-1 range
+                original_color = segment['color']
+                if isinstance(original_color, int):
+                    # Convert integer color to RGB tuple (0-1 range)
+                    r = ((original_color >> 16) & 255) / 255.0
+                    g = ((original_color >> 8) & 255) / 255.0
+                    b = (original_color & 255) / 255.0
+                    normalized_color = (r, g, b)
+                elif isinstance(original_color, (list, tuple)):
+                    # Ensure color components are in 0-1 range
+                    if len(original_color) >= 3:
+                        # Check if values are in 0-255 range and normalize
+                        if any(c > 1.0 for c in original_color[:3]):
+                            normalized_color = tuple(c / 255.0 for c in original_color[:3])
+                        else:
+                            normalized_color = tuple(original_color[:3])
+                    else:
+                        normalized_color = (0, 0, 0)  # Default to black
+                else:
+                    normalized_color = (0, 0, 0)  # Default to black
+                
+                # Insert the translated text
+                new_page.insert_textbox(
+                    segment['rect'],
+                    translated_text,
+                    fontname=font_name_for_pdf,
+                    fontfile=font_file_to_use,
+                    fontsize=segment['size'],
+                    color=normalized_color,
+                    align=fitz.TEXT_ALIGN_LEFT
+                )
+            except Exception as e:
+                print(f"      - Could not process segment {i}: '{segment['text'][:30]}...'. Error: {e}")
     try:
         print(f"💾 Saving translated PDF as '{output_path}'...")
         # Save to local file first
