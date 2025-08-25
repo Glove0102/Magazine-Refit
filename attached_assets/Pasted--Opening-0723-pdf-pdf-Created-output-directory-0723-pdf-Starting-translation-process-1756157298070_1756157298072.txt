@@ -1,0 +1,513 @@
+📖 Opening '0723.pdf.pdf'...
+📁 Created output directory: 0723.pdf
+🚀 Starting translation process with bold detection...
+📄 Each page will be saved as a separate PDF in '0723.pdf/' folder
+    -> Processing page 1/138...
+      - Found 28 text segments, translating in batch...
+      - Translating batch 1 (28 segments)...
+      - API response length: 418
+      - Successfully parsed 28 translations
+      - Text inserted with 60% font size for segment 0
+      - Successfully inserted text for segment 0
+      - Changed white/light text to black for visibility
+      - Used fallback text insertion for segment 1
+      - Successfully inserted text for segment 1
+      - Changed white/light text to black for visibility
+      - Text inserted with 60% font size for segment 2
+      - Successfully inserted text for segment 2
+      - Text inserted with 50% font size for segment 3
+      - Successfully inserted text for segment 3
+      - Text inserted with 50% font size for segment 4
+      - Successfully inserted text for segment 4
+      - Text inserted with 50% font size for segment 5
+      - Successfully inserted text for segment 5
+      - Text inserted with 50% font size for segment 6
+      - Successfully inserted text for segment 6
+      - Text inserted with 50% font size for segment 7
+      - Successfully inserted text for segment 7
+      - Text inserted with 50% font size for segment 8
+      - Successfully inserted text for segment 8
+      - Text inserted with 50% font size for segment 9
+      - Successfully inserted text for segment 9
+      - Text inserted with 50% font size for segment 10
+      - Successfully inserted text for segment 10
+      - Text inserted with 50% font size for segment 11
+      - Successfully inserted text for segment 11
+      - Text inserted with 50% font size for segment 12
+      - Successfully inserted text for segment 12
+      - Text inserted with 50% font size for segment 13
+      - Successfully inserted text for segment 13
+      - Text inserted with 50% font size for segment 14
+      - Successfully inserted text for segment 14
+      - Text inserted with 50% font size for segment 15
+      - Successfully inserted text for segment 15
+      - Text inserted with 50% font size for segment 16
+      - Successfully inserted text for segment 16
+      - Text inserted with 50% font size for segment 17
+      - Successfully inserted text for segment 17
+      - Text inserted with 50% font size for segment 18
+      - Successfully inserted text for segment 18
+      - Text inserted with 50% font size for segment 19
+      - Successfully inserted text for segment 19
+      - Text inserted with 50% font size for segment 20
+      - Successfully inserted text for segment 20
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 21
+      - Successfully inserted text for segment 21
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 22
+      - Successfully inserted text for segment 22
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 23
+      - Successfully inserted text for segment 23
+      - Text inserted with 50% font size for segment 24
+      - Successfully inserted text for segment 24
+      - Text inserted with 50% font size for segment 25
+      - Successfully inserted text for segment 25
+      - Text inserted with 50% font size for segment 26
+      - Successfully inserted text for segment 26
+      - Text inserted with 50% font size for segment 27
+      - Successfully inserted text for segment 27
+      ✅ Saved: 0723.pdf/page_001.pdf
+    -> Processing page 2/138...
+    -> Processing page 3/138...
+    -> Processing page 4/138...
+    -> Processing page 5/138...
+      - Found 72 text segments, translating in batch...
+      - Translating batch 1 (50 segments)...
+      - API response length: 1133
+      - Successfully parsed 50 translations
+      - Translating batch 2 (22 segments)...
+      - API response length: 340
+      - Successfully parsed 22 translations
+      - Text inserted with 50% font size for segment 0
+      - Successfully inserted text for segment 0
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 1
+      - Successfully inserted text for segment 1
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 2
+      - Successfully inserted text for segment 2
+      - Text inserted with 50% font size for segment 3
+      - Successfully inserted text for segment 3
+      - Text inserted with 50% font size for segment 4
+      - Successfully inserted text for segment 4
+      - Text inserted with 50% font size for segment 5
+      - Successfully inserted text for segment 5
+      - Text inserted with 50% font size for segment 6
+      - Successfully inserted text for segment 6
+      - Text inserted with 50% font size for segment 7
+      - Successfully inserted text for segment 7
+      - Text inserted with 50% font size for segment 8
+      - Successfully inserted text for segment 8
+      - Text inserted with 50% font size for segment 9
+      - Successfully inserted text for segment 9
+      - Text inserted with 50% font size for segment 10
+      - Successfully inserted text for segment 10
+      - Text inserted with 50% font size for segment 11
+      - Successfully inserted text for segment 11
+      - Text inserted with 50% font size for segment 12
+      - Successfully inserted text for segment 12
+      - Text inserted with 50% font size for segment 13
+      - Successfully inserted text for segment 13
+      - Text inserted with 50% font size for segment 14
+      - Successfully inserted text for segment 14
+      - Text inserted with 50% font size for segment 15
+      - Successfully inserted text for segment 15
+      - Text inserted with 50% font size for segment 16
+      - Successfully inserted text for segment 16
+      - Text inserted with 50% font size for segment 17
+      - Successfully inserted text for segment 17
+      - Text inserted with 50% font size for segment 18
+      - Successfully inserted text for segment 18
+      - Text inserted with 50% font size for segment 19
+      - Successfully inserted text for segment 19
+      - Text inserted with 50% font size for segment 20
+      - Successfully inserted text for segment 20
+      - Text inserted with 50% font size for segment 21
+      - Successfully inserted text for segment 21
+      - Text inserted with 50% font size for segment 22
+      - Successfully inserted text for segment 22
+      - Text inserted with 50% font size for segment 23
+      - Successfully inserted text for segment 23
+      - Text inserted with 50% font size for segment 24
+      - Successfully inserted text for segment 24
+      - Text inserted with 50% font size for segment 25
+      - Successfully inserted text for segment 25
+      - Text inserted with 50% font size for segment 26
+      - Successfully inserted text for segment 26
+      - Text inserted with 50% font size for segment 27
+      - Successfully inserted text for segment 27
+      - Text inserted with 50% font size for segment 28
+      - Successfully inserted text for segment 28
+      - Text inserted with 50% font size for segment 29
+      - Successfully inserted text for segment 29
+      - Text inserted with 50% font size for segment 30
+      - Successfully inserted text for segment 30
+      - Text inserted with 50% font size for segment 31
+      - Successfully inserted text for segment 31
+      - Text inserted with 50% font size for segment 32
+      - Successfully inserted text for segment 32
+      - Text inserted with 50% font size for segment 33
+      - Successfully inserted text for segment 33
+      - Text inserted with 50% font size for segment 34
+      - Successfully inserted text for segment 34
+      - Text inserted with 50% font size for segment 35
+      - Successfully inserted text for segment 35
+      - Text inserted with 50% font size for segment 36
+      - Successfully inserted text for segment 36
+      - Text inserted with 50% font size for segment 37
+      - Successfully inserted text for segment 37
+      - Text inserted with 50% font size for segment 38
+      - Successfully inserted text for segment 38
+      - Text inserted with 50% font size for segment 39
+      - Successfully inserted text for segment 39
+      - Text inserted with 50% font size for segment 40
+      - Successfully inserted text for segment 40
+      - Text inserted with 50% font size for segment 41
+      - Successfully inserted text for segment 41
+      - Text inserted with 50% font size for segment 42
+      - Successfully inserted text for segment 42
+      - Text inserted with 50% font size for segment 43
+      - Successfully inserted text for segment 43
+      - Text inserted with 50% font size for segment 44
+      - Successfully inserted text for segment 44
+      - Text inserted with 50% font size for segment 45
+      - Successfully inserted text for segment 45
+      - Text inserted with 50% font size for segment 46
+      - Successfully inserted text for segment 46
+      - Text inserted with 50% font size for segment 47
+      - Successfully inserted text for segment 47
+      - Text inserted with 50% font size for segment 48
+      - Successfully inserted text for segment 48
+      - Text inserted with 50% font size for segment 49
+      - Successfully inserted text for segment 49
+      - Text inserted with 50% font size for segment 50
+      - Successfully inserted text for segment 50
+      - Text inserted with 50% font size for segment 51
+      - Successfully inserted text for segment 51
+      - Text inserted with 50% font size for segment 52
+      - Successfully inserted text for segment 52
+      - Text inserted with 50% font size for segment 53
+      - Successfully inserted text for segment 53
+      - Text inserted with 50% font size for segment 54
+      - Successfully inserted text for segment 54
+      - Text inserted with 50% font size for segment 55
+      - Successfully inserted text for segment 55
+      - Text inserted with 50% font size for segment 56
+      - Successfully inserted text for segment 56
+      - Text inserted with 50% font size for segment 57
+      - Successfully inserted text for segment 57
+      - Text inserted with 50% font size for segment 58
+      - Successfully inserted text for segment 58
+      - Text inserted with 50% font size for segment 59
+      - Successfully inserted text for segment 59
+      - Text inserted with 50% font size for segment 60
+      - Successfully inserted text for segment 60
+      - Text inserted with 50% font size for segment 61
+      - Successfully inserted text for segment 61
+      - Text inserted with 50% font size for segment 62
+      - Successfully inserted text for segment 62
+      - Text inserted with 50% font size for segment 63
+      - Successfully inserted text for segment 63
+      - Text inserted with 50% font size for segment 64
+      - Successfully inserted text for segment 64
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 65
+      - Successfully inserted text for segment 65
+      - Text inserted with 50% font size for segment 66
+      - Successfully inserted text for segment 66
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 67
+      - Successfully inserted text for segment 67
+      - Text inserted with 50% font size for segment 68
+      - Successfully inserted text for segment 68
+      - Text inserted with 50% font size for segment 69
+      - Successfully inserted text for segment 69
+      - Text inserted with 50% font size for segment 70
+      - Successfully inserted text for segment 70
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 71
+      - Successfully inserted text for segment 71
+      ✅ Saved: 0723.pdf/page_005.pdf
+    -> Processing page 6/138...
+      - Found 90 text segments, translating in batch...
+      - Translating batch 1 (50 segments)...
+      - API response length: 984
+      - Successfully parsed 49 translations
+      - Translating batch 2 (40 segments)...
+      - API response length: 1064
+      - Successfully parsed 40 translations
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 0
+      - Successfully inserted text for segment 0
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 1
+      - Successfully inserted text for segment 1
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 2
+      - Successfully inserted text for segment 2
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 3
+      - Successfully inserted text for segment 3
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 4
+      - Successfully inserted text for segment 4
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 5
+      - Successfully inserted text for segment 5
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 6
+      - Successfully inserted text for segment 6
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 7
+      - Successfully inserted text for segment 7
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 8
+      - Successfully inserted text for segment 8
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 9
+      - Successfully inserted text for segment 9
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 10
+      - Successfully inserted text for segment 10
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 11
+      - Successfully inserted text for segment 11
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 12
+      - Successfully inserted text for segment 12
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 13
+      - Successfully inserted text for segment 13
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 14
+      - Successfully inserted text for segment 14
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 15
+      - Successfully inserted text for segment 15
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 16
+      - Successfully inserted text for segment 16
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 17
+      - Successfully inserted text for segment 17
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 18
+      - Successfully inserted text for segment 18
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 19
+      - Successfully inserted text for segment 19
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 20
+      - Successfully inserted text for segment 20
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 21
+      - Successfully inserted text for segment 21
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 22
+      - Successfully inserted text for segment 22
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 23
+      - Successfully inserted text for segment 23
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 24
+      - Successfully inserted text for segment 24
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 25
+      - Successfully inserted text for segment 25
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 26
+      - Successfully inserted text for segment 26
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 27
+      - Successfully inserted text for segment 27
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 28
+      - Successfully inserted text for segment 28
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 29
+      - Successfully inserted text for segment 29
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 30
+      - Successfully inserted text for segment 30
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 31
+      - Successfully inserted text for segment 31
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 32
+      - Successfully inserted text for segment 32
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 33
+      - Successfully inserted text for segment 33
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 34
+      - Successfully inserted text for segment 34
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 35
+      - Successfully inserted text for segment 35
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 36
+      - Successfully inserted text for segment 36
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 37
+      - Successfully inserted text for segment 37
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 38
+      - Successfully inserted text for segment 38
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 39
+      - Successfully inserted text for segment 39
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 40
+      - Successfully inserted text for segment 40
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 41
+      - Successfully inserted text for segment 41
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 42
+      - Successfully inserted text for segment 42
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 43
+      - Successfully inserted text for segment 43
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 44
+      - Successfully inserted text for segment 44
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 45
+      - Successfully inserted text for segment 45
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 46
+      - Successfully inserted text for segment 46
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 47
+      - Successfully inserted text for segment 47
+      - Changed white/light text to black for visibility
+      - Used fallback text insertion for segment 48
+      - Successfully inserted text for segment 48
+      - No translation found for segment 49: '’s right to edit and comment e...'
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 50
+      - Successfully inserted text for segment 50
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 51
+      - Successfully inserted text for segment 51
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 52
+      - Successfully inserted text for segment 52
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 53
+      - Successfully inserted text for segment 53
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 54
+      - Successfully inserted text for segment 54
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 55
+      - Successfully inserted text for segment 55
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 56
+      - Successfully inserted text for segment 56
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 57
+      - Successfully inserted text for segment 57
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 58
+      - Successfully inserted text for segment 58
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 59
+      - Successfully inserted text for segment 59
+      - Changed white/light text to black for visibility
+      - Used fallback text insertion for segment 60
+      - Successfully inserted text for segment 60
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 61
+      - Successfully inserted text for segment 61
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 62
+      - Successfully inserted text for segment 62
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 63
+      - Successfully inserted text for segment 63
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 64
+      - Successfully inserted text for segment 64
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 65
+      - Successfully inserted text for segment 65
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 66
+      - Successfully inserted text for segment 66
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 67
+      - Successfully inserted text for segment 67
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 68
+      - Successfully inserted text for segment 68
+      - Changed white/light text to black for visibility
+      - Used fallback text insertion for segment 69
+      - Successfully inserted text for segment 69
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 70
+      - Successfully inserted text for segment 70
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 71
+      - Successfully inserted text for segment 71
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 72
+      - Successfully inserted text for segment 72
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 73
+      - Successfully inserted text for segment 73
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 74
+      - Successfully inserted text for segment 74
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 75
+      - Successfully inserted text for segment 75
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 76
+      - Successfully inserted text for segment 76
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 77
+      - Successfully inserted text for segment 77
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 78
+      - Successfully inserted text for segment 78
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 79
+      - Successfully inserted text for segment 79
+      - Changed white/light text to black for visibility
+      - Text inserted with 60% font size for segment 80
+      - Successfully inserted text for segment 80
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 81
+      - Successfully inserted text for segment 81
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 82
+      - Successfully inserted text for segment 82
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 83
+      - Successfully inserted text for segment 83
+      - Text inserted with 50% font size for segment 84
+      - Successfully inserted text for segment 84
+      - Text inserted with 50% font size for segment 85
+      - Successfully inserted text for segment 85
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 86
+      - Successfully inserted text for segment 86
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 87
+      - Successfully inserted text for segment 87
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 88
+      - Successfully inserted text for segment 88
+      - Changed white/light text to black for visibility
+      - Text inserted with 50% font size for segment 89
+      - Successfully inserted text for segment 89
+      ✅ Saved: 0723.pdf/page_006.pdf
+    -> Processing page 7/138...
+      - Found 55 text segments, translating in batch...
+      - Translating batch 1 (50 segments)...
+      - API response length: 1256
+      - Successfully parsed 50 translations
+      - Translating batch 2 (5 segments)...
