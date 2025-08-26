@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -54,10 +55,6 @@
             height: 200px;
             overflow-y: scroll;
             display: none;
-        }
-        .user-info {
-            font-size: 10px;
-            text-align: right;
         }
         .status {
             font-weight: bold;
@@ -123,22 +120,14 @@
 </head>
 <body>
     <div class="header">
-        <div style="float: left;">
-            <h2>PDF TRANSLATION CONTROL PANEL v1.0</h2>
-            <p>System Status: <span style="color: green;">ONLINE</span></p>
-            <div class="admin-status {% if admin_authenticated %}unlocked{% else %}locked{% endif %}">
-                Admin Status: {% if admin_authenticated %}AUTHENTICATED{% else %}LOCKED{% endif %}
-                {% if not admin_authenticated %}
-                <button onclick="showAdminAuth()" style="margin-left: 10px; font-size: 9px;">UNLOCK</button>
-                {% endif %}
-            </div>
+        <h2>PDF TRANSLATION CONTROL PANEL v1.0</h2>
+        <p>System Status: <span style="color: green;">ONLINE</span></p>
+        <div class="admin-status {% if admin_authenticated %}unlocked{% else %}locked{% endif %}">
+            Admin Status: {% if admin_authenticated %}AUTHENTICATED{% else %}LOCKED{% endif %}
+            {% if not admin_authenticated %}
+            <button onclick="showAdminAuth()" style="margin-left: 10px; font-size: 9px;">UNLOCK</button>
+            {% endif %}
         </div>
-        <div class="user-info">
-            Logged in as: <strong>{{ user.name }}</strong><br>
-            User ID: {{ user.id }}<br>
-            <img src="{{ user.profile_image }}" width="32" height="32" style="vertical-align: middle;" />
-        </div>
-        <div style="clear: both;"></div>
     </div>
 
     <div class="section">
