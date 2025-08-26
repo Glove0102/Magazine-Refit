@@ -6,7 +6,7 @@ from replit.object_storage import Client
 
 # --- Configuration ---
 # 1. Name of the PDF you want to translate
-input_pdf = "0723.pdf.pdf"
+input_pdf = "louiseeliasbergs1996bowe.pdf"
 # 2. Name for the new, translated PDF
 output_pdf = "0723zh.pdf"
 # 3. Name of the REGULAR font file
