@@ -1,13 +1,11 @@
 
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, render_template, request, jsonify
 import subprocess
 import os
 from replit.object_storage import Client
 import hashlib
-import secrets
 
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY', secrets.token_hex(32))
 
 def verify_admin_password(password):
     """Verify admin password against stored hash"""
@@ -22,14 +20,8 @@ def verify_admin_password(password):
     print(f"DEBUG: Password verification result: {result}")
     return result
 
-def is_admin_authenticated(request):
-    """Check if user has admin privileges"""
-    return session.get('admin_authenticated', False)
-
 @app.route('/')
 def dashboard():
-    admin_auth = is_admin_authenticated(request)
-
     # Get available folders from Object Storage
     storage_client = Client()
     try:
@@ -50,28 +42,18 @@ def dashboard():
 
     return render_template('dashboard.html', 
                          folders=sorted(folders), 
-                         pdf_files=sorted(pdf_files),
-                         admin_authenticated=admin_auth)
-
-@app.route('/admin_auth', methods=['POST'])
-def admin_auth():
-    password = request.json.get('password')
-    if not password:
-        return jsonify({'error': 'Password required'}), 400
-
-    if verify_admin_password(password):
-        session['admin_authenticated'] = True
-        return jsonify({'success': True})
-    else:
-        return jsonify({'error': 'Invalid admin password'}), 401
+                         pdf_files=sorted(pdf_files))
 
 @app.route('/translate', methods=['POST'])
 def translate_pdf():
     try:
         print("DEBUG: Translation endpoint called")
-        if not is_admin_authenticated(request):
-            print("DEBUG: Admin not authenticated")
-            return jsonify({'error': 'Admin authentication required'}), 403
+        
+        # Check password directly
+        password = request.form.get('password')
+        if not password or not verify_admin_password(password):
+            print("DEBUG: Invalid or missing password")
+            return jsonify({'error': 'Invalid admin password'}), 403
 
         pdf_file = request.form.get('pdf_file')
         print(f"DEBUG: PDF file requested: {pdf_file}")
@@ -115,19 +97,22 @@ def translate_pdf():
 
 @app.route('/merge', methods=['POST'])
 def merge_folder():
-    admin_auth = is_admin_authenticated(request)
-    print(f"DEBUG: Merge endpoint - admin_auth: {admin_auth}")
-    if not admin_auth:
-        return jsonify({'error': 'Admin authentication required'}), 403
-
     try:
-        # Handle both JSON and form data
+        # Check password directly
+        password = None
         folder_name = None
+        
         if request.is_json:
             data = request.get_json()
+            password = data.get('password') if data else None
             folder_name = data.get('folder_name') if data else None
         else:
+            password = request.form.get('password')
             folder_name = request.form.get('folder_name')
+        
+        if not password or not verify_admin_password(password):
+            print("DEBUG: Invalid or missing password")
+            return jsonify({'error': 'Invalid admin password'}), 403
 
         if not folder_name:
             return jsonify({'error': 'No folder specified'}), 400

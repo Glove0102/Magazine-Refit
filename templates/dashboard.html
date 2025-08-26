@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -133,9 +132,15 @@
     <div class="section">
         <div class="section-title">TRANSLATE PDF TO CHINESE</div>
         <form id="translateForm">
-            <table>
+            <table class="form-table">
                 <tr>
-                    <td width="150">Select PDF File:</td>
+                    <td>Admin Password:</td>
+                    <td>
+                        <input type="password" name="password" placeholder="Enter admin password" required>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Select PDF File:</td>
                     <td>
                         <select name="pdf_file" id="pdfSelect" required>
                             <option value="">-- SELECT PDF FILE --</option>
@@ -148,10 +153,9 @@
                 <tr>
                     <td>Action:</td>
                     <td>
-                        <button type="submit" {% if not admin_authenticated %}disabled{% endif %}>START TRANSLATION</button>
+                        <button type="submit">START TRANSLATION</button>
                         <span style="margin-left: 20px; font-size: 10px;">
                             Note: This will create individual page PDFs in Object Storage
-                            {% if not admin_authenticated %}<br><strong>Admin authentication required</strong>{% endif %}
                         </span>
                     </td>
                 </tr>
@@ -164,9 +168,15 @@
     <div class="section">
         <div class="section-title">MERGE PDF PAGES</div>
         <form id="mergeForm">
-            <table>
+            <table class="form-table">
                 <tr>
-                    <td width="150">Select Folder:</td>
+                    <td>Admin Password:</td>
+                    <td>
+                        <input type="password" name="password" placeholder="Enter admin password" required>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Select Folder:</td>
                     <td>
                         <select name="folder_name" id="folderSelect" required>
                             <option value="">-- SELECT FOLDER --</option>
@@ -179,10 +189,9 @@
                 <tr>
                     <td>Action:</td>
                     <td>
-                        <button type="submit" {% if not admin_authenticated %}disabled{% endif %}>MERGE PAGES</button>
+                        <button type="submit">MERGE PAGES</button>
                         <span style="margin-left: 20px; font-size: 10px;">
                             Note: This will create a single merged PDF in the folder
-                            {% if not admin_authenticated %}<br><strong>Admin authentication required</strong>{% endif %}
                         </span>
                     </td>
                 </tr>
@@ -277,11 +286,6 @@
         document.getElementById('translateForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
-            {% if not admin_authenticated %}
-            showAdminAuth();
-            return;
-            {% endif %}
-
             const status = document.getElementById('translateStatus');
             const output = document.getElementById('translateOutput');
             const formData = new FormData(this);
@@ -329,11 +333,6 @@
         // Handle merge form
         document.getElementById('mergeForm').addEventListener('submit', function(e) {
             e.preventDefault();
-
-            {% if not admin_authenticated %}
-            showAdminAuth();
-            return;
-            {% endif %}
 
             const status = document.getElementById('mergeStatus');
             const output = document.getElementById('mergeOutput');
