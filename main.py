@@ -112,15 +112,12 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
     print(f"📖 Opening '{input_path}'...")
     original_doc = fitz.open(stream=pdf_data, filetype="pdf")
 
-    # Create output directory based on input filename
+    # Create output directory name based on input filename
     base_name = os.path.splitext(input_path)[0]  # Remove extension
     output_dir = base_name
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-        print(f"📁 Created output directory: {output_dir}")
-
+    
     print("🚀 Starting translation process with bold detection...")
-    print(f"📄 Each page will be saved as a separate PDF in '{output_dir}/' folder")
+    print(f"📄 Each page will be saved as a separate PDF in Object Storage under '{output_dir}/' folder")
 
     for page_num, page in enumerate(original_doc):
         print(f"    -> Processing page {page_num + 1}/{len(original_doc)}...")
@@ -156,14 +153,17 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
             # Still need to save the page even if it has no text to translate
             try:
                 page_filename = f"page_{page_num + 1:03d}.pdf"
-                page_path = os.path.join(output_dir, page_filename)
-                single_page_doc.save(page_path, garbage=4, deflate=True, clean=True)
-                print(f"      ✅ Saved: {page_path}")
+                storage_page_path = f"{output_dir}/{page_filename}"
                 
-                # Also upload this page to Object Storage
-                with open(page_path, 'rb') as f:
-                    storage_page_path = f"{output_dir}/{page_filename}"
-                    storage_client.upload_from_bytes(storage_page_path, f.read())
+                # Save to a temporary bytes buffer instead of local file
+                import io
+                pdf_bytes = io.BytesIO()
+                single_page_doc.save(pdf_bytes, garbage=4, deflate=True, clean=True)
+                pdf_bytes.seek(0)
+                
+                # Upload directly to Object Storage
+                storage_client.upload_from_bytes(storage_page_path, pdf_bytes.getvalue())
+                print(f"      ✅ Saved to Object Storage: {storage_page_path}")
                     
             except Exception as e:
                 print(f"      ❌ Error saving empty page {page_num + 1}: {e}")
@@ -306,24 +306,27 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
             except Exception as e:
                 print(f"      - Could not process segment {i}: '{segment['text'][:30]}...'. Error: {e}")
         
-        # Save this single page as its own PDF
+        # Save this single page as its own PDF directly to Object Storage
         try:
             page_filename = f"page_{page_num + 1:03d}.pdf"
-            page_path = os.path.join(output_dir, page_filename)
-            single_page_doc.save(page_path, garbage=4, deflate=True, clean=True)
-            print(f"      ✅ Saved: {page_path}")
+            storage_page_path = f"{output_dir}/{page_filename}"
             
-            # Also upload this page to Object Storage
-            with open(page_path, 'rb') as f:
-                storage_page_path = f"{output_dir}/{page_filename}"
-                storage_client.upload_from_bytes(storage_page_path, f.read())
+            # Save to a temporary bytes buffer instead of local file
+            import io
+            pdf_bytes = io.BytesIO()
+            single_page_doc.save(pdf_bytes, garbage=4, deflate=True, clean=True)
+            pdf_bytes.seek(0)
+            
+            # Upload directly to Object Storage
+            storage_client.upload_from_bytes(storage_page_path, pdf_bytes.getvalue())
+            print(f"      ✅ Saved to Object Storage: {storage_page_path}")
                 
         except Exception as e:
             print(f"      ❌ Error saving page {page_num + 1}: {e}")
         finally:
             single_page_doc.close()
-    print(f"✅ Translation complete! All pages saved individually in '{output_dir}/' folder")
-    print(f"📁 Check the '{output_dir}' directory to see pages 1-{len(original_doc)}")
+    print(f"✅ Translation complete! All pages saved individually in Object Storage under '{output_dir}/' folder")
+    print(f"📁 Check Object Storage to see pages 1-{len(original_doc)} in the '{output_dir}' folder")
     original_doc.close()
 
 # --- Run the script ---
