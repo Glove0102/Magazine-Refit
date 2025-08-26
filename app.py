@@ -13,11 +13,14 @@ def verify_admin_password(password):
     """Verify admin password against stored hash"""
     stored_hash = os.getenv('ADMIN_PASSWORD_HASH')
     if not stored_hash:
+        print("DEBUG: No ADMIN_PASSWORD_HASH found in environment")
         return False
 
     # Hash the provided password
     password_hash = hashlib.sha256(password.encode()).hexdigest()
-    return password_hash == stored_hash
+    result = password_hash == stored_hash
+    print(f"DEBUG: Password verification result: {result}")
+    return result
 
 def is_admin_authenticated(request):
     """Check if user has admin privileges"""
@@ -64,12 +67,13 @@ def admin_auth():
 
 @app.route('/translate', methods=['POST'])
 def translate_pdf():
-    if not is_admin_authenticated(request):
-        return jsonify({'error': 'Admin authentication required'}), 403
+    try:
+        if not is_admin_authenticated(request):
+            return jsonify({'error': 'Admin authentication required'}), 403
 
-    pdf_file = request.form.get('pdf_file')
-    if not pdf_file:
-        return jsonify({'error': 'No PDF file specified'}), 400
+        pdf_file = request.form.get('pdf_file')
+        if not pdf_file:
+            return jsonify({'error': 'No PDF file specified'}), 400
 
     # Run the translation script
     try:
@@ -99,7 +103,8 @@ def translate_pdf():
     except subprocess.TimeoutExpired:
         return jsonify({'error': 'Translation timed out (5 min limit)'}), 408
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f"Translation error: {str(e)}")  # Debug logging
+        return jsonify({'error': f'Translation failed: {str(e)}'}), 500
 
 @app.route('/merge', methods=['POST'])
 def merge_folder():
