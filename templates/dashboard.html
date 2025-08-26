@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -37,6 +38,11 @@
         button:active {
             border: 2px inset #f0f0f0;
         }
+        button:disabled {
+            background-color: #e0e0e0;
+            color: #999999;
+            cursor: not-allowed;
+        }
         select, input[type="text"] {
             font-family: "Courier New", monospace;
             font-size: 11px;
@@ -58,32 +64,6 @@
         .status {
             font-weight: bold;
             margin: 5px 0;
-        }
-        .popup-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: none;
-            z-index: 1000;
-        }
-        .popup {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #ffffff;
-            border: 2px solid #000000;
-            padding: 20px;
-            width: 300px;
-            font-family: "Courier New", monospace;
-        }
-        .popup-title {
-            font-weight: bold;
-            text-decoration: underline;
-            margin-bottom: 15px;
         }
         .admin-status {
             padding: 5px;
@@ -115,34 +95,64 @@
             background-color: #e0e0e0;
             font-weight: bold;
         }
+        .disabled-section {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        .auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: none;
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .auth-box {
+            border: 2px solid #000000;
+            background-color: #ffffff;
+            padding: 30px;
+            text-align: center;
+            font-family: "Courier New", monospace;
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <h2>PDF TRANSLATION CONTROL PANEL v1.0</h2>
         <p>System Status: <span style="color: green;">ONLINE</span></p>
-        <div class="admin-status {% if admin_authenticated %}unlocked{% else %}locked{% endif %}">
-            Admin Status: {% if admin_authenticated %}AUTHENTICATED{% else %}LOCKED{% endif %}
-            {% if not admin_authenticated %}
-            <button onclick="showAdminAuth()" style="margin-left: 10px; font-size: 9px;">UNLOCK</button>
-            {% endif %}
+        <div class="admin-status" id="adminStatus">
+            <span id="authStatusText">Admin Status: CHECKING...</span>
+            <button id="authButton" onclick="authenticate()" style="margin-left: 10px; font-size: 9px;">AUTHENTICATE</button>
         </div>
     </div>
 
-    <div class="section">
-        <div class="section-title">TRANSLATE PDF TO CHINESE</div>
-        <form id="translateForm">
-            <table class="form-table">
-                <tr>
-                    <td>Admin Password:</td>
-                    <td>
-                        <input type="password" name="password" placeholder="Enter admin password" required>
-                    </td>
-                </tr>
+    <!-- Authentication Overlay -->
+    <div id="authOverlay" class="auth-overlay">
+        <div class="auth-box">
+            <div style="font-weight: bold; margin-bottom: 20px;">ADMIN AUTHENTICATION REQUIRED</div>
+            <div style="margin: 15px 0;">Enter admin password to access system:</div>
+            <input type="password" id="authPassword" placeholder="Admin Password" 
+                   style="width: 200px; margin: 10px 0; padding: 5px;">
+            <div style="margin-top: 15px;">
+                <button onclick="submitAuth()">AUTHENTICATE</button>
+                <button onclick="hideAuth()" style="margin-left: 10px;">CANCEL</button>
+            </div>
+            <div id="authError" style="color: red; margin-top: 10px; display: none;"></div>
+        </div>
+    </div>
+
+    <div id="mainContent">
+        <div class="section">
+            <div class="section-title">PDF TRANSLATION SYSTEM</div>
+            <table>
                 <tr>
                     <td>Select PDF File:</td>
                     <td>
-                        <select name="pdf_file" id="pdfSelect" required>
+                        <select id="pdfSelect" required>
                             <option value="">-- SELECT PDF FILE --</option>
                             {% for pdf in pdf_files %}
                             <option value="{{ pdf }}">{{ pdf }}</option>
@@ -151,34 +161,32 @@
                     </td>
                 </tr>
                 <tr>
+                    <td>Translation Target:</td>
+                    <td>Simplified Chinese (Automatic)</td>
+                </tr>
+                <tr>
+                    <td>Output Format:</td>
+                    <td>Individual Page PDFs in Object Storage</td>
+                </tr>
+                <tr>
                     <td>Action:</td>
                     <td>
-                        <button type="submit">START TRANSLATION</button>
-                        <span style="margin-left: 20px; font-size: 10px;">
-                            Note: This will create individual page PDFs in Object Storage
-                        </span>
+                        <button onclick="startTranslation()" id="translateBtn">START TRANSLATION</button>
+                        <button onclick="viewProgress()" id="progressBtn" style="margin-left: 10px;">VIEW PROGRESS</button>
                     </td>
                 </tr>
             </table>
-        </form>
-        <div id="translateStatus" class="status"></div>
-        <div id="translateOutput" class="output"></div>
-    </div>
+            <div id="translateStatus" class="status"></div>
+            <div id="translateOutput" class="output"></div>
+        </div>
 
-    <div class="section">
-        <div class="section-title">MERGE PDF PAGES</div>
-        <form id="mergeForm">
-            <table class="form-table">
-                <tr>
-                    <td>Admin Password:</td>
-                    <td>
-                        <input type="password" name="password" placeholder="Enter admin password" required>
-                    </td>
-                </tr>
+        <div class="section">
+            <div class="section-title">MERGE PDF PAGES</div>
+            <table>
                 <tr>
                     <td>Select Folder:</td>
                     <td>
-                        <select name="folder_name" id="folderSelect" required>
+                        <select id="folderSelect" required>
                             <option value="">-- SELECT FOLDER --</option>
                             {% for folder in folders %}
                             <option value="{{ folder }}">{{ folder }}</option>
@@ -189,106 +197,151 @@
                 <tr>
                     <td>Action:</td>
                     <td>
-                        <button type="submit">MERGE PAGES</button>
+                        <button onclick="startMerge()">MERGE PAGES</button>
                         <span style="margin-left: 20px; font-size: 10px;">
-                            Note: This will create a single merged PDF in the folder
+                            Creates a single merged PDF in the selected folder
                         </span>
                     </td>
                 </tr>
             </table>
-        </form>
-        <div id="mergeStatus" class="status"></div>
-        <div id="mergeOutput" class="output"></div>
-    </div>
+            <div id="mergeStatus" class="status"></div>
+            <div id="mergeOutput" class="output"></div>
+        </div>
 
-    <div class="section">
-        <div class="section-title">SYSTEM INFORMATION</div>
-        <table>
-            <tr><th>Property</th><th>Value</th></tr>
-            <tr><td>Available PDF Files</td><td>{{ pdf_files|length }}</td></tr>
-            <tr><td>Available Folders</td><td>{{ folders|length }}</td></tr>
-            <tr><td>Server Time</td><td id="serverTime"></td></tr>
-        </table>
-        <button onclick="location.reload()">REFRESH DATA</button>
-    </div>
-
-    <!-- Admin Authentication Popup -->
-    <div id="adminPopup" class="popup-overlay">
-        <div class="popup">
-            <div class="popup-title">ADMIN AUTHENTICATION REQUIRED</div>
-            <div style="margin: 15px 0; font-size: 11px;">
-                Enter admin password to access system controls:
-            </div>
-            <form id="adminAuthForm">
-                <input type="password" id="adminPassword" placeholder="Admin Password" 
-                       style="width: 100%; margin: 10px 0; padding: 5px;" required>
-                <div style="text-align: center; margin-top: 15px;">
-                    <button type="submit">AUTHENTICATE</button>
-                    <button type="button" onclick="hideAdminAuth()" style="margin-left: 10px;">CANCEL</button>
-                </div>
-            </form>
-            <div id="adminAuthError" style="color: red; font-size: 10px; margin-top: 10px; display: none;"></div>
+        <div class="section">
+            <div class="section-title">SYSTEM INFORMATION</div>
+            <table>
+                <tr><th>Property</th><th>Value</th></tr>
+                <tr><td>Available PDF Files</td><td>{{ pdf_files|length }}</td></tr>
+                <tr><td>Available Folders</td><td>{{ folders|length }}</td></tr>
+                <tr><td>Authentication Status</td><td id="authTableStatus">LOCKED</td></tr>
+                <tr><td>Server Time</td><td id="serverTime"></td></tr>
+            </table>
+            <button onclick="location.reload()">REFRESH DATA</button>
         </div>
     </div>
 
     <script>
-        // Admin authentication functions
-        function showAdminAuth() {
-            document.getElementById('adminPopup').style.display = 'block';
-            document.getElementById('adminPassword').focus();
+        let isAuthenticated = false;
+        let authToken = null;
+
+        // Check authentication status on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            checkAuthStatus();
+            updateTime();
+            setInterval(updateTime, 1000);
+        });
+
+        function updateTime() {
+            document.getElementById('serverTime').textContent = new Date().toLocaleString();
         }
 
-        function hideAdminAuth() {
-            document.getElementById('adminPopup').style.display = 'none';
-            document.getElementById('adminPassword').value = '';
-            document.getElementById('adminAuthError').style.display = 'none';
+        function checkAuthStatus() {
+            // Check if we have a valid session
+            fetch('/check_auth')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.authenticated) {
+                        setAuthenticatedState(true);
+                    } else {
+                        setAuthenticatedState(false);
+                        showAuth();
+                    }
+                })
+                .catch(() => {
+                    setAuthenticatedState(false);
+                    showAuth();
+                });
         }
 
-        // Handle admin authentication
-        document.getElementById('adminAuthForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+        function setAuthenticatedState(authenticated) {
+            isAuthenticated = authenticated;
+            const statusText = document.getElementById('authStatusText');
+            const authButton = document.getElementById('authButton');
+            const adminStatus = document.getElementById('adminStatus');
+            const mainContent = document.getElementById('mainContent');
+            const authTableStatus = document.getElementById('authTableStatus');
 
-            const password = document.getElementById('adminPassword').value;
-            const errorDiv = document.getElementById('adminAuthError');
+            if (authenticated) {
+                statusText.textContent = 'Admin Status: AUTHENTICATED';
+                authButton.style.display = 'none';
+                adminStatus.className = 'admin-status unlocked';
+                mainContent.classList.remove('disabled-section');
+                authTableStatus.textContent = 'AUTHENTICATED';
+                authTableStatus.style.color = 'green';
+            } else {
+                statusText.textContent = 'Admin Status: LOCKED';
+                authButton.style.display = 'inline';
+                authButton.textContent = 'AUTHENTICATE';
+                adminStatus.className = 'admin-status locked';
+                mainContent.classList.add('disabled-section');
+                authTableStatus.textContent = 'LOCKED';
+                authTableStatus.style.color = 'red';
+            }
+        }
+
+        function authenticate() {
+            showAuth();
+        }
+
+        function showAuth() {
+            document.getElementById('authOverlay').style.display = 'flex';
+            document.getElementById('authPassword').focus();
+        }
+
+        function hideAuth() {
+            if (!isAuthenticated) {
+                // Don't allow hiding if not authenticated
+                return;
+            }
+            document.getElementById('authOverlay').style.display = 'none';
+            document.getElementById('authPassword').value = '';
+            document.getElementById('authError').style.display = 'none';
+        }
+
+        function submitAuth() {
+            const password = document.getElementById('authPassword').value;
+            const errorDiv = document.getElementById('authError');
 
             fetch('/admin_auth', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ password: password })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    hideAdminAuth();
-                    location.reload(); // Refresh to show unlocked state
+                    authToken = data.token || 'authenticated';
+                    setAuthenticatedState(true);
+                    document.getElementById('authOverlay').style.display = 'none';
+                    document.getElementById('authPassword').value = '';
+                    document.getElementById('authError').style.display = 'none';
                 } else {
                     errorDiv.textContent = 'ERROR: ' + data.error;
                     errorDiv.style.display = 'block';
-                    document.getElementById('adminPassword').value = '';
+                    document.getElementById('authPassword').value = '';
                 }
             })
             .catch(error => {
                 errorDiv.textContent = 'SYSTEM ERROR: ' + error.message;
                 errorDiv.style.display = 'block';
             });
-        });
-
-        // Update server time
-        function updateTime() {
-            document.getElementById('serverTime').textContent = new Date().toLocaleString();
         }
-        updateTime();
-        setInterval(updateTime, 1000);
 
-        // Handle translation form
-        document.getElementById('translateForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+        function startTranslation() {
+            if (!isAuthenticated) {
+                showAuth();
+                return;
+            }
+
+            const pdfFile = document.getElementById('pdfSelect').value;
+            if (!pdfFile) {
+                alert('Please select a PDF file');
+                return;
+            }
 
             const status = document.getElementById('translateStatus');
             const output = document.getElementById('translateOutput');
-            const formData = new FormData(this);
 
             status.textContent = 'PROCESSING... Please wait...';
             status.style.color = 'orange';
@@ -297,21 +350,13 @@
 
             fetch('/translate', {
                 method: 'POST',
-                body: formData
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    pdf_file: pdfFile,
+                    auth_token: authToken 
+                })
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                const contentType = response.headers.get('content-type');
-                if (contentType && contentType.includes('application/json')) {
-                    return response.json();
-                } else {
-                    return response.text().then(text => {
-                        throw new Error(`Received non-JSON response: ${text.substring(0, 100)}...`);
-                    });
-                }
-            })
+            .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     status.textContent = 'TRANSLATION COMPLETED SUCCESSFULLY';
@@ -328,15 +373,31 @@
                 status.style.color = 'red';
                 output.textContent = 'ERROR: ' + error.message;
             });
-        });
+        }
 
-        // Handle merge form
-        document.getElementById('mergeForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+        function viewProgress() {
+            const output = document.getElementById('translateOutput');
+            if (output.style.display === 'none') {
+                output.style.display = 'block';
+            } else {
+                output.style.display = 'none';
+            }
+        }
+
+        function startMerge() {
+            if (!isAuthenticated) {
+                showAuth();
+                return;
+            }
+
+            const folderName = document.getElementById('folderSelect').value;
+            if (!folderName) {
+                alert('Please select a folder');
+                return;
+            }
 
             const status = document.getElementById('mergeStatus');
             const output = document.getElementById('mergeOutput');
-            const formData = new FormData(this);
 
             status.textContent = 'PROCESSING... Please wait...';
             status.style.color = 'orange';
@@ -345,21 +406,13 @@
 
             fetch('/merge', {
                 method: 'POST',
-                body: formData
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    folder_name: folderName,
+                    auth_token: authToken 
+                })
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                const contentType = response.headers.get('content-type');
-                if (contentType && contentType.includes('application/json')) {
-                    return response.json();
-                } else {
-                    return response.text().then(text => {
-                        throw new Error(`Received non-JSON response: ${text.substring(0, 100)}...`);
-                    });
-                }
-            })
+            .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     status.textContent = 'MERGE COMPLETED SUCCESSFULLY';
@@ -376,6 +429,13 @@
                 status.style.color = 'red';
                 output.textContent = 'ERROR: ' + error.message;
             });
+        }
+
+        // Handle Enter key in auth password field
+        document.getElementById('authPassword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                submitAuth();
+            }
         });
     </script>
 </body>

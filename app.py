@@ -1,11 +1,13 @@
 
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session
 import subprocess
 import os
 from replit.object_storage import Client
 import hashlib
+import uuid
 
 app = Flask(__name__)
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'your-secret-key-change-this')
 
 def verify_admin_password(password):
     """Verify admin password against stored hash"""
@@ -14,11 +16,14 @@ def verify_admin_password(password):
         print("DEBUG: No ADMIN_PASSWORD_HASH found in environment")
         return False
 
-    # Hash the provided password
     password_hash = hashlib.sha256(password.encode()).hexdigest()
     result = password_hash == stored_hash
     print(f"DEBUG: Password verification result: {result}")
     return result
+
+def is_authenticated():
+    """Check if current session is authenticated"""
+    return session.get('authenticated', False)
 
 @app.route('/')
 def dashboard():
@@ -44,102 +49,110 @@ def dashboard():
                          folders=sorted(folders), 
                          pdf_files=sorted(pdf_files))
 
+@app.route('/check_auth')
+def check_auth():
+    """Check authentication status"""
+    return jsonify({'authenticated': is_authenticated()})
+
+@app.route('/admin_auth', methods=['POST'])
+def admin_auth():
+    """Handle admin authentication"""
+    try:
+        data = request.get_json()
+        password = data.get('password')
+        
+        if not password:
+            return jsonify({'success': False, 'error': 'No password provided'}), 400
+            
+        if verify_admin_password(password):
+            session['authenticated'] = True
+            session['auth_token'] = str(uuid.uuid4())
+            return jsonify({'success': True, 'token': session['auth_token']})
+        else:
+            return jsonify({'success': False, 'error': 'Invalid admin password'}), 403
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/translate', methods=['POST'])
 def translate_pdf():
     try:
-        print("DEBUG: Translation endpoint called")
-        print(f"DEBUG: Content-Type: {request.content_type}")
-        print(f"DEBUG: Form data: {dict(request.form)}")
-        
-        # Check password directly
-        password = request.form.get('password')
-        print(f"DEBUG: Password received: {'***' if password else 'None'}")
-        
-        if not password:
-            return jsonify({'error': 'No password provided'}), 400
-            
-        if not verify_admin_password(password):
-            print("DEBUG: Password verification failed")
-            return jsonify({'error': 'Invalid admin password'}), 403
+        if not is_authenticated():
+            return jsonify({'error': 'Authentication required'}), 403
 
-        pdf_file = request.form.get('pdf_file')
-        print(f"DEBUG: PDF file requested: {pdf_file}")
+        data = request.get_json()
+        pdf_file = data.get('pdf_file')
+        
         if not pdf_file:
             return jsonify({'error': 'No PDF file specified'}), 400
 
-        # Run the translation script
-        try:
-            # Update the main.py configuration
-            with open('main.py', 'r') as f:
-                content = f.read()
+        print(f"DEBUG: Starting translation for: {pdf_file}")
 
-            # Replace the input_pdf value
-            lines = content.split('\n')
-            for i, line in enumerate(lines):
-                if line.startswith('input_pdf = '):
-                    lines[i] = f'input_pdf = "{pdf_file}"'
-                    break
+        # Update the main.py configuration
+        with open('main.py', 'r') as f:
+            content = f.read()
 
-            with open('main.py', 'w') as f:
-                f.write('\n'.join(lines))
+        # Replace the input_pdf value
+        lines = content.split('\n')
+        for i, line in enumerate(lines):
+            if line.startswith('input_pdf = '):
+                lines[i] = f'input_pdf = "{pdf_file}"'
+                break
 
-            # Run the translation
-            result = subprocess.run(['python', 'main.py'], 
-                                  capture_output=True, text=True, timeout=300)
+        with open('main.py', 'w') as f:
+            f.write('\n'.join(lines))
 
-            return jsonify({
-                'success': True,
-                'output': result.stdout,
-                'error': result.stderr if result.stderr else None
-            })
-        except FileNotFoundError:
-            return jsonify({'error': 'Translation script not found'}), 500
-        except PermissionError:
-            return jsonify({'error': 'Permission denied accessing files'}), 500
+        # Run the translation
+        result = subprocess.run(['python', 'main.py'], 
+                              capture_output=True, text=True, timeout=600)
+
+        return jsonify({
+            'success': True,
+            'output': result.stdout,
+            'error': result.stderr if result.stderr else None
+        })
+
     except subprocess.TimeoutExpired:
-        return jsonify({'error': 'Translation timed out (5 min limit)'}), 408
+        return jsonify({'error': 'Translation timed out (10 min limit)'}), 408
     except Exception as e:
-        print(f"Translation error: {str(e)}")  # Debug logging
+        print(f"Translation error: {str(e)}")
         return jsonify({'error': f'Translation failed: {str(e)}'}), 500
 
 @app.route('/merge', methods=['POST'])
 def merge_folder():
     try:
-        # Check password directly
-        password = None
-        folder_name = None
-        
-        if request.is_json:
-            data = request.get_json()
-            password = data.get('password') if data else None
-            folder_name = data.get('folder_name') if data else None
-        else:
-            password = request.form.get('password')
-            folder_name = request.form.get('folder_name')
-        
-        if not password or not verify_admin_password(password):
-            print("DEBUG: Invalid or missing password")
-            return jsonify({'error': 'Invalid admin password'}), 403
+        if not is_authenticated():
+            return jsonify({'error': 'Authentication required'}), 403
 
+        data = request.get_json()
+        folder_name = data.get('folder_name')
+        
         if not folder_name:
             return jsonify({'error': 'No folder specified'}), 400
 
-        # Run the merge script with folder name as command-line argument
+        print(f"DEBUG: Starting merge for folder: {folder_name}")
+
+        # Run the merge script
         result = subprocess.run(['python', 'merge_pdfs.py', folder_name], 
                               capture_output=True, text=True, timeout=120)
 
-        response_data = {
+        return jsonify({
             'success': True,
             'output': result.stdout,
             'error': result.stderr if result.stderr else None
-        }
-
-        return jsonify(response_data)
+        })
 
     except subprocess.TimeoutExpired:
         return jsonify({'error': 'Merge timed out (2 min limit)'}), 408
     except Exception as e:
+        print(f"Merge error: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
+@app.route('/logout')
+def logout():
+    """Clear authentication session"""
+    session.clear()
+    return jsonify({'success': True})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
