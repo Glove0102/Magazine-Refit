@@ -1,4 +1,3 @@
-
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 import subprocess
 import os
@@ -28,7 +27,7 @@ def verify_admin_password(password):
     stored_hash = os.getenv('ADMIN_PASSWORD_HASH')
     if not stored_hash:
         return False
-    
+
     # Hash the provided password
     password_hash = hashlib.sha256(password.encode()).hexdigest()
     return password_hash == stored_hash
@@ -41,17 +40,17 @@ def is_admin_authenticated(request):
 def dashboard():
     if not is_authenticated(request):
         return redirect('/login')
-    
+
     user = get_user_info(request)
     admin_auth = is_admin_authenticated(request)
-    
+
     # Get available folders from Object Storage
     storage_client = Client()
     try:
         all_objects = storage_client.list()
         folders = set()
         pdf_files = []
-        
+
         for obj in all_objects:
             if obj.name.endswith('.pdf'):
                 if '/' in obj.name:
@@ -62,7 +61,7 @@ def dashboard():
     except:
         folders = set()
         pdf_files = []
-    
+
     return render_template('dashboard.html', 
                          user=user, 
                          folders=sorted(folders), 
@@ -77,11 +76,11 @@ def login():
 def admin_auth():
     if not is_authenticated(request):
         return jsonify({'error': 'Not authenticated'}), 401
-    
+
     password = request.json.get('password')
     if not password:
         return jsonify({'error': 'Password required'}), 400
-    
+
     if verify_admin_password(password):
         session['admin_authenticated'] = True
         return jsonify({'success': True})
@@ -92,34 +91,34 @@ def admin_auth():
 def translate_pdf():
     if not is_authenticated(request):
         return jsonify({'error': 'Not authenticated'}), 401
-    
+
     if not is_admin_authenticated(request):
         return jsonify({'error': 'Admin authentication required'}), 403
-    
+
     pdf_file = request.form.get('pdf_file')
     if not pdf_file:
         return jsonify({'error': 'No PDF file specified'}), 400
-    
+
     # Run the translation script
     try:
         # Update the main.py configuration
         with open('main.py', 'r') as f:
             content = f.read()
-        
+
         # Replace the input_pdf value
         lines = content.split('\n')
         for i, line in enumerate(lines):
             if line.startswith('input_pdf = '):
                 lines[i] = f'input_pdf = "{pdf_file}"'
                 break
-        
+
         with open('main.py', 'w') as f:
             f.write('\n'.join(lines))
-        
+
         # Run the translation
         result = subprocess.run(['python', 'main.py'], 
                               capture_output=True, text=True, timeout=300)
-        
+
         return jsonify({
             'success': True,
             'output': result.stdout,
@@ -134,10 +133,12 @@ def translate_pdf():
 def merge_folder():
     if not is_authenticated(request):
         return jsonify({'error': 'Not authenticated'}), 401
-    
-    if not is_admin_authenticated(request):
+
+    admin_auth = is_admin_authenticated(request)
+    print(f"DEBUG: Merge endpoint - admin_auth: {admin_auth}")
+    if not admin_auth:
         return jsonify({'error': 'Admin authentication required'}), 403
-    
+
     try:
         # Handle both JSON and form data
         folder_name = None
@@ -146,36 +147,36 @@ def merge_folder():
             folder_name = data.get('folder_name') if data else None
         else:
             folder_name = request.form.get('folder_name')
-            
+
         if not folder_name:
             return jsonify({'error': 'No folder specified'}), 400
-        
+
         # Update the merge_pdfs.py configuration
         with open('merge_pdfs.py', 'r') as f:
             content = f.read()
-        
+
         # Replace the target_folder value
         lines = content.split('\n')
         for i, line in enumerate(lines):
             if line.startswith('target_folder = '):
                 lines[i] = f'target_folder = "{folder_name}"'
                 break
-        
+
         with open('merge_pdfs.py', 'w') as f:
             f.write('\n'.join(lines))
-        
+
         # Run the merge script
         result = subprocess.run(['python', 'merge_pdfs.py'], 
                               capture_output=True, text=True, timeout=120)
-        
+
         response_data = {
             'success': True,
             'output': result.stdout,
             'error': result.stderr if result.stderr else None
         }
-        
+
         return jsonify(response_data)
-        
+
     except subprocess.TimeoutExpired:
         return jsonify({'error': 'Merge timed out (2 min limit)'}), 408
     except Exception as e:
