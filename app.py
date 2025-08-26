@@ -1,4 +1,3 @@
-
 from flask import Flask, render_template, request, jsonify, session
 import subprocess
 import os
@@ -60,17 +59,17 @@ def admin_auth():
     try:
         data = request.get_json()
         password = data.get('password')
-        
+
         if not password:
             return jsonify({'success': False, 'error': 'No password provided'}), 400
-            
+
         if verify_admin_password(password):
             session['authenticated'] = True
             session['auth_token'] = str(uuid.uuid4())
             return jsonify({'success': True, 'token': session['auth_token']})
         else:
             return jsonify({'success': False, 'error': 'Invalid admin password'}), 403
-            
+
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -82,39 +81,24 @@ def translate_pdf():
 
         data = request.get_json()
         pdf_file = data.get('pdf_file')
-        
+
         if not pdf_file:
             return jsonify({'error': 'No PDF file specified'}), 400
 
         print(f"DEBUG: Starting translation for: {pdf_file}")
 
-        # Run the translation with proper process isolation
-        import signal
-        
-        # Create a new process group to prevent Flask restarts from killing the subprocess
-        result = subprocess.run(['python', 'main.py', pdf_file], 
-                              capture_output=True, text=True, timeout=600,
-                              preexec_fn=os.setsid)
+        # Use Popen to run the translation in the background
+        subprocess.Popen(['python', 'main.py', pdf_file])
 
-        if result.returncode == 0:
-            return jsonify({
-                'success': True,
-                'output': result.stdout,
-                'error': result.stderr if result.stderr else None
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'error': f'Translation process failed with code {result.returncode}',
-                'output': result.stdout,
-                'stderr': result.stderr
-            }), 500
+        return jsonify({
+            'success': True,
+            'message': f'Translation for {pdf_file} has started. Check the console logs for progress.'
+        })
 
-    except subprocess.TimeoutExpired:
-        return jsonify({'error': 'Translation timed out (10 min limit)'}), 408
     except Exception as e:
         print(f"Translation error: {str(e)}")
-        return jsonify({'error': f'Translation failed: {str(e)}'}), 500
+        return jsonify({'error': f'Failed to start translation: {str(e)}'}), 500
+
 
 @app.route('/merge', methods=['POST'])
 def merge_folder():
@@ -124,27 +108,23 @@ def merge_folder():
 
         data = request.get_json()
         folder_name = data.get('folder_name')
-        
+
         if not folder_name:
             return jsonify({'error': 'No folder specified'}), 400
 
         print(f"DEBUG: Starting merge for folder: {folder_name}")
 
-        # Run the merge script
-        result = subprocess.run(['python', 'merge_pdfs.py', folder_name], 
-                              capture_output=True, text=True, timeout=120)
+        # Run the merge script in the background
+        subprocess.Popen(['python', 'merge_pdfs.py', folder_name])
 
         return jsonify({
             'success': True,
-            'output': result.stdout,
-            'error': result.stderr if result.stderr else None
+            'message': f'Merging for folder {folder_name} has started.'
         })
 
-    except subprocess.TimeoutExpired:
-        return jsonify({'error': 'Merge timed out (2 min limit)'}), 408
     except Exception as e:
         print(f"Merge error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': f'Failed to start merge: {str(e)}'}), 500
 
 @app.route('/logout')
 def logout():
