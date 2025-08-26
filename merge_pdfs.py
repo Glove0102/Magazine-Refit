@@ -52,15 +52,26 @@ def merge_pdfs_from_folder(folder_path):
                 # Open the PDF
                 current_doc = fitz.open(stream=pdf_data, filetype="pdf")
                 
+                # Get page count before closing
+                page_count = len(current_doc)
+                
                 # Add all pages from this PDF to the merged document
-                for page_num in range(len(current_doc)):
+                for page_num in range(page_count):
                     merged_doc.insert_pdf(current_doc, from_page=page_num, to_page=page_num)
                 
+                print(f"      ✅ Added {page_count} page(s) from {pdf_obj.name}")
+                
+                # Close the current document after processing
                 current_doc.close()
-                print(f"      ✅ Added {len(current_doc)} page(s) from {pdf_obj.name}")
                 
             except Exception as e:
                 print(f"      ❌ Error processing {pdf_obj.name}: {e}")
+                # Make sure to close the document even if there was an error
+                try:
+                    if 'current_doc' in locals():
+                        current_doc.close()
+                except:
+                    pass
                 continue
         
         if len(merged_doc) == 0:
