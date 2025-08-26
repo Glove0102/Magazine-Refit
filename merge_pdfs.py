@@ -1,6 +1,7 @@
 
 import fitz  # PyMuPDF
 import os
+import sys
 from replit.object_storage import Client
 
 def merge_pdfs_from_folder(folder_path):
@@ -130,25 +131,25 @@ def list_available_folders():
         print(f"❌ Error listing folders: {e}")
         return []
 
-# --- Configuration ---
-# Set the folder path you want to merge PDFs from
-# Example: "0723.pdf" (this would merge all PDFs in the 0723.pdf folder)
-target_folder = "0723.pdf"
-
 # --- Run the script ---
 if __name__ == "__main__":
     print("🔧 PDF Merger for Object Storage")
     print("=" * 50)
     
-    # First, show available folders
-    print("Available folders:")
-    available_folders = list_available_folders()
-    
-    print("\n" + "=" * 50)
-    
-    if target_folder:
-        print(f"🎯 Target folder: {target_folder}")
+    # Check if folder name was provided as command-line argument
+    if len(sys.argv) > 1:
+        target_folder = sys.argv[1]
+        print(f"🎯 Target folder from command line: {target_folder}")
         merge_pdfs_from_folder(target_folder)
     else:
-        print("❌ Please set the 'target_folder' variable in the script")
-        print("Example: target_folder = '0723.pdf'")
+        # If no argument provided, show available folders and ask for input
+        print("Available folders:")
+        available_folders = list_available_folders()
+        
+        print("\n" + "=" * 50)
+        print("❌ Please provide folder name as command-line argument")
+        print("Usage: python merge_pdfs.py <folder_name>")
+        print("Example: python merge_pdfs.py 0723.pdf")
+        
+        if available_folders:
+            print(f"\nAvailable folders: {', '.join(available_folders)}")

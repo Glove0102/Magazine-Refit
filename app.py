@@ -120,22 +120,8 @@ def merge_folder():
         if not folder_name:
             return jsonify({'error': 'No folder specified'}), 400
 
-        # Update the merge_pdfs.py configuration
-        with open('merge_pdfs.py', 'r') as f:
-            content = f.read()
-
-        # Replace the target_folder value
-        lines = content.split('\n')
-        for i, line in enumerate(lines):
-            if line.startswith('target_folder = '):
-                lines[i] = f'target_folder = "{folder_name}"'
-                break
-
-        with open('merge_pdfs.py', 'w') as f:
-            f.write('\n'.join(lines))
-
-        # Run the merge script
-        result = subprocess.run(['python', 'merge_pdfs.py'], 
+        # Run the merge script with folder name as command-line argument
+        result = subprocess.run(['python', 'merge_pdfs.py', folder_name], 
                               capture_output=True, text=True, timeout=120)
 
         response_data = {
