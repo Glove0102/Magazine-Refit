@@ -206,12 +206,12 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
                     font_name_for_pdf = "china-font-regular"
                 
                 # Step 1: Draw a white/light background rectangle to cover the original text
-                # Expand the rectangle slightly to ensure full coverage
+                # Use minimal expansion to avoid overlapping with adjacent text
                 cover_rect = fitz.Rect(
-                    segment['rect'].x0 - 1,  # Slightly expand left
-                    segment['rect'].y0 - 1,  # Slightly expand top
-                    segment['rect'].x1 + 1,  # Slightly expand right
-                    segment['rect'].y1 + 1   # Slightly expand bottom
+                    segment['rect'].x0 - 0.5,  # Minimal expand left
+                    segment['rect'].y0,        # No vertical expansion to avoid line overlap
+                    segment['rect'].x1 + 0.5,  # Minimal expand right
+                    segment['rect'].y1         # No vertical expansion to avoid line overlap
                 )
                 
                 # Draw white rectangle to cover original text
