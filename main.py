@@ -1,12 +1,13 @@
 import fitz  # PyMuPDF
 import os
 import time
+import sys
 from openai import OpenAI
 from replit.object_storage import Client
 
 # --- Configuration ---
-# 1. Name of the PDF you want to translate
-input_pdf = "louiseeliasbergs1996bowe.pdf"
+# 1. Name of the PDF you want to translate (now passed as command-line argument)
+# input_pdf = "louiseeliasbergs1996bowe.pdf"
 # 2. Name for the new, translated PDF
 output_pdf = "0723zh.pdf"
 # 3. Name of the REGULAR font file
@@ -331,4 +332,10 @@ def translate_pdf_with_bolding(input_path, output_path, regular_font, bold_font)
 
 # --- Run the script ---
 if __name__ == "__main__":
-    translate_pdf_with_bolding(input_pdf, output_pdf, font_path_regular, font_path_bold)
+    if len(sys.argv) > 1:
+        # Get the input PDF filename from the first command-line argument
+        input_pdf_from_arg = sys.argv[1]
+        translate_pdf_with_bolding(input_pdf_from_arg, output_pdf, font_path_regular, font_path_bold)
+    else:
+        # Print an error if no file is provided, which helps with debugging
+        print("ERROR: No input PDF file was specified as a command-line argument.")

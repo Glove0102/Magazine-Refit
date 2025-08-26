@@ -88,22 +88,8 @@ def translate_pdf():
 
         print(f"DEBUG: Starting translation for: {pdf_file}")
 
-        # Update the main.py configuration
-        with open('main.py', 'r') as f:
-            content = f.read()
-
-        # Replace the input_pdf value
-        lines = content.split('\n')
-        for i, line in enumerate(lines):
-            if line.startswith('input_pdf = '):
-                lines[i] = f'input_pdf = "{pdf_file}"'
-                break
-
-        with open('main.py', 'w') as f:
-            f.write('\n'.join(lines))
-
-        # Run the translation
-        result = subprocess.run(['python', 'main.py'], 
+        # Run the translation, passing the PDF file as a command-line argument
+        result = subprocess.run(['python', 'main.py', pdf_file], 
                               capture_output=True, text=True, timeout=600)
 
         return jsonify({
