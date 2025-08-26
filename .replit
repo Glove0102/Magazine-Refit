@@ -3,7 +3,6 @@ modules = ["python-3.11"]
 
 [nix]
 channel = "stable-25_05"
-packages = ["imagemagick_light"]
 
 [unitTest]
 language = "python3"
@@ -12,24 +11,8 @@ language = "python3"
 requiredFiles = [".replit", "replit.nix"]
 
 [deployment]
-run = ["sh", "-c", "gunicorn --bind 0.0.0.0:5000 --workers 2 --timeout 120 app:app"]
+run = ["python3", "main.py"]
 deploymentTarget = "cloudrun"
 
 [objectStorage]
 defaultBucketID = "replit-objstore-90cdf83f-ad70-4b54-9f29-7f2870bcd963"
-
-[workflows]
-runButton = "Web Dashboard"
-
-[[workflows.workflow]]
-name = "Web Dashboard"
-author = 15297962
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python app.py"
-
-[[ports]]
-localPort = 5000
-externalPort = 80
