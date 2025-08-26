@@ -138,11 +138,16 @@ def merge_folder():
     if not is_admin_authenticated(request):
         return jsonify({'error': 'Admin authentication required'}), 403
     
-    folder_name = request.form.get('folder_name')
-    if not folder_name:
-        return jsonify({'error': 'No folder specified'}), 400
-    
     try:
+        data = request.get_json()
+        if not data:
+            folder_name = request.form.get('folder_name')
+        else:
+            folder_name = data.get('folder_name')
+            
+        if not folder_name:
+            return jsonify({'error': 'No folder specified'}), 400
+        
         # Update the merge_pdfs.py configuration
         with open('merge_pdfs.py', 'r') as f:
             content = f.read()
@@ -161,11 +166,14 @@ def merge_folder():
         result = subprocess.run(['python', 'merge_pdfs.py'], 
                               capture_output=True, text=True, timeout=120)
         
-        return jsonify({
+        response_data = {
             'success': True,
             'output': result.stdout,
             'error': result.stderr if result.stderr else None
-        })
+        }
+        
+        return jsonify(response_data)
+        
     except subprocess.TimeoutExpired:
         return jsonify({'error': 'Merge timed out (2 min limit)'}), 408
     except Exception as e:
