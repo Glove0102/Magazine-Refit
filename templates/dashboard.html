@@ -64,6 +64,47 @@
             font-weight: bold;
             margin: 5px 0;
         }
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 1000;
+        }
+        .popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #ffffff;
+            border: 2px solid #000000;
+            padding: 20px;
+            width: 300px;
+            font-family: "Courier New", monospace;
+        }
+        .popup-title {
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 15px;
+        }
+        .admin-status {
+            padding: 5px;
+            margin: 10px 0;
+            border: 1px solid #000000;
+            background-color: #f0f0f0;
+            font-size: 10px;
+        }
+        .locked {
+            background-color: #ffe0e0;
+            color: #800000;
+        }
+        .unlocked {
+            background-color: #e0ffe0;
+            color: #008000;
+        }
         table {
             border-collapse: collapse;
             width: 100%;
@@ -86,6 +127,12 @@
         <div style="float: left;">
             <h2>PDF TRANSLATION CONTROL PANEL v1.0</h2>
             <p>System Status: <span style="color: green;">ONLINE</span></p>
+            <div class="admin-status {% if admin_authenticated %}unlocked{% else %}locked{% endif %}">
+                Admin Status: {% if admin_authenticated %}AUTHENTICATED{% else %}LOCKED{% endif %}
+                {% if not admin_authenticated %}
+                <button onclick="showAdminAuth()" style="margin-left: 10px; font-size: 9px;">UNLOCK</button>
+                {% endif %}
+            </div>
         </div>
         <div class="user-info">
             Logged in as: <strong>{{ user.name }}</strong><br>
@@ -113,9 +160,10 @@
                 <tr>
                     <td>Action:</td>
                     <td>
-                        <button type="submit">START TRANSLATION</button>
+                        <button type="submit" {% if not admin_authenticated %}disabled{% endif %}>START TRANSLATION</button>
                         <span style="margin-left: 20px; font-size: 10px;">
                             Note: This will create individual page PDFs in Object Storage
+                            {% if not admin_authenticated %}<br><strong>Admin authentication required</strong>{% endif %}
                         </span>
                     </td>
                 </tr>
@@ -143,9 +191,10 @@
                 <tr>
                     <td>Action:</td>
                     <td>
-                        <button type="submit">MERGE PAGES</button>
+                        <button type="submit" {% if not admin_authenticated %}disabled{% endif %}>MERGE PAGES</button>
                         <span style="margin-left: 20px; font-size: 10px;">
                             Note: This will create a single merged PDF in the folder
+                            {% if not admin_authenticated %}<br><strong>Admin authentication required</strong>{% endif %}
                         </span>
                     </td>
                 </tr>
@@ -166,7 +215,69 @@
         <button onclick="location.reload()">REFRESH DATA</button>
     </div>
 
+    <!-- Admin Authentication Popup -->
+    <div id="adminPopup" class="popup-overlay">
+        <div class="popup">
+            <div class="popup-title">ADMIN AUTHENTICATION REQUIRED</div>
+            <div style="margin: 15px 0; font-size: 11px;">
+                Enter admin password to access system controls:
+            </div>
+            <form id="adminAuthForm">
+                <input type="password" id="adminPassword" placeholder="Admin Password" 
+                       style="width: 100%; margin: 10px 0; padding: 5px;" required>
+                <div style="text-align: center; margin-top: 15px;">
+                    <button type="submit">AUTHENTICATE</button>
+                    <button type="button" onclick="hideAdminAuth()" style="margin-left: 10px;">CANCEL</button>
+                </div>
+            </form>
+            <div id="adminAuthError" style="color: red; font-size: 10px; margin-top: 10px; display: none;"></div>
+        </div>
+    </div>
+
     <script>
+        // Admin authentication functions
+        function showAdminAuth() {
+            document.getElementById('adminPopup').style.display = 'block';
+            document.getElementById('adminPassword').focus();
+        }
+
+        function hideAdminAuth() {
+            document.getElementById('adminPopup').style.display = 'none';
+            document.getElementById('adminPassword').value = '';
+            document.getElementById('adminAuthError').style.display = 'none';
+        }
+
+        // Handle admin authentication
+        document.getElementById('adminAuthForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const password = document.getElementById('adminPassword').value;
+            const errorDiv = document.getElementById('adminAuthError');
+            
+            fetch('/admin_auth', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ password: password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    hideAdminAuth();
+                    location.reload(); // Refresh to show unlocked state
+                } else {
+                    errorDiv.textContent = 'ERROR: ' + data.error;
+                    errorDiv.style.display = 'block';
+                    document.getElementById('adminPassword').value = '';
+                }
+            })
+            .catch(error => {
+                errorDiv.textContent = 'SYSTEM ERROR: ' + error.message;
+                errorDiv.style.display = 'block';
+            });
+        });
+
         // Update server time
         function updateTime() {
             document.getElementById('serverTime').textContent = new Date().toLocaleString();
@@ -177,6 +288,11 @@
         // Handle translation form
         document.getElementById('translateForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            
+            {% if not admin_authenticated %}
+            showAdminAuth();
+            return;
+            {% endif %}
             
             const status = document.getElementById('translateStatus');
             const output = document.getElementById('translateOutput');
@@ -213,6 +329,11 @@
         // Handle merge form
         document.getElementById('mergeForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            
+            {% if not admin_authenticated %}
+            showAdminAuth();
+            return;
+            {% endif %}
             
             const status = document.getElementById('mergeStatus');
             const output = document.getElementById('mergeOutput');

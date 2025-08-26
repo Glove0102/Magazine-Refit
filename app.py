@@ -1,10 +1,13 @@
 
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 import subprocess
 import os
 from replit.object_storage import Client
+import hashlib
+import secrets
 
 app = Flask(__name__)
+app.secret_key = os.getenv('SECRET_KEY', secrets.token_hex(32))
 
 def get_user_info(request):
     """Extract user info from Repl Auth headers"""
@@ -20,12 +23,27 @@ def is_authenticated(request):
     """Check if user is authenticated via Repl Auth"""
     return request.headers.get('X-Replit-User-Id') is not None
 
+def verify_admin_password(password):
+    """Verify admin password against stored hash"""
+    stored_hash = os.getenv('ADMIN_PASSWORD_HASH')
+    if not stored_hash:
+        return False
+    
+    # Hash the provided password
+    password_hash = hashlib.sha256(password.encode()).hexdigest()
+    return password_hash == stored_hash
+
+def is_admin_authenticated(request):
+    """Check if user has admin privileges"""
+    return session.get('admin_authenticated', False)
+
 @app.route('/')
 def dashboard():
     if not is_authenticated(request):
         return redirect('/login')
     
     user = get_user_info(request)
+    admin_auth = is_admin_authenticated(request)
     
     # Get available folders from Object Storage
     storage_client = Client()
@@ -48,16 +66,35 @@ def dashboard():
     return render_template('dashboard.html', 
                          user=user, 
                          folders=sorted(folders), 
-                         pdf_files=sorted(pdf_files))
+                         pdf_files=sorted(pdf_files),
+                         admin_authenticated=admin_auth)
 
 @app.route('/login')
 def login():
     return render_template('login.html')
 
+@app.route('/admin_auth', methods=['POST'])
+def admin_auth():
+    if not is_authenticated(request):
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    password = request.json.get('password')
+    if not password:
+        return jsonify({'error': 'Password required'}), 400
+    
+    if verify_admin_password(password):
+        session['admin_authenticated'] = True
+        return jsonify({'success': True})
+    else:
+        return jsonify({'error': 'Invalid admin password'}), 401
+
 @app.route('/translate', methods=['POST'])
 def translate_pdf():
     if not is_authenticated(request):
         return jsonify({'error': 'Not authenticated'}), 401
+    
+    if not is_admin_authenticated(request):
+        return jsonify({'error': 'Admin authentication required'}), 403
     
     pdf_file = request.form.get('pdf_file')
     if not pdf_file:
@@ -97,6 +134,9 @@ def translate_pdf():
 def merge_folder():
     if not is_authenticated(request):
         return jsonify({'error': 'Not authenticated'}), 401
+    
+    if not is_admin_authenticated(request):
+        return jsonify({'error': 'Admin authentication required'}), 403
     
     folder_name = request.form.get('folder_name')
     if not folder_name:
