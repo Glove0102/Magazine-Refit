@@ -88,15 +88,27 @@ def translate_pdf():
 
         print(f"DEBUG: Starting translation for: {pdf_file}")
 
-        # Run the translation, passing the PDF file as a command-line argument
+        # Run the translation with proper process isolation
+        import signal
+        
+        # Create a new process group to prevent Flask restarts from killing the subprocess
         result = subprocess.run(['python', 'main.py', pdf_file], 
-                              capture_output=True, text=True, timeout=600)
+                              capture_output=True, text=True, timeout=600,
+                              preexec_fn=os.setsid)
 
-        return jsonify({
-            'success': True,
-            'output': result.stdout,
-            'error': result.stderr if result.stderr else None
-        })
+        if result.returncode == 0:
+            return jsonify({
+                'success': True,
+                'output': result.stdout,
+                'error': result.stderr if result.stderr else None
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': f'Translation process failed with code {result.returncode}',
+                'output': result.stdout,
+                'stderr': result.stderr
+            }), 500
 
     except subprocess.TimeoutExpired:
         return jsonify({'error': 'Translation timed out (10 min limit)'}), 408
@@ -141,4 +153,4 @@ def logout():
     return jsonify({'success': True})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=False)
