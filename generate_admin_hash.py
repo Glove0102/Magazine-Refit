@@ -2,7 +2,7 @@
 import hashlib
 
 # Replace this with your desired admin password
-password = "your_admin_password_here"  # Change this to your actual password
+password = "***AJAX119"  # Change this to your actual password
 
 # Generate the hash
 hash_value = hashlib.sha256(password.encode()).hexdigest()
