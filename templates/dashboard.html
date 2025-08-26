@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -250,10 +249,10 @@
         // Handle admin authentication
         document.getElementById('adminAuthForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
+
             const password = document.getElementById('adminPassword').value;
             const errorDiv = document.getElementById('adminAuthError');
-            
+
             fetch('/admin_auth', {
                 method: 'POST',
                 headers: {
@@ -288,29 +287,41 @@
         // Handle translation form
         document.getElementById('translateForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
+
             {% if not admin_authenticated %}
             showAdminAuth();
             return;
             {% endif %}
-            
+
             const status = document.getElementById('translateStatus');
             const output = document.getElementById('translateOutput');
             const formData = new FormData(this);
-            
+
             status.textContent = 'PROCESSING... Please wait...';
             status.style.color = 'orange';
             output.style.display = 'block';
             output.textContent = 'Starting translation process...\n';
-            
+
             fetch('/translate', {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json();
+                } else {
+                    return response.text().then(text => {
+                        throw new Error(`Received non-JSON response: ${text.substring(0, 100)}...`);
+                    });
+                }
+            })
             .then(data => {
                 if (data.success) {
-                    status.textContent = 'TRANSLATION COMPLETED';
+                    status.textContent = 'TRANSLATION COMPLETED SUCCESSFULLY';
                     status.style.color = 'green';
                     output.textContent = data.output;
                 } else {
@@ -329,29 +340,41 @@
         // Handle merge form
         document.getElementById('mergeForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
+
             {% if not admin_authenticated %}
             showAdminAuth();
             return;
             {% endif %}
-            
+
             const status = document.getElementById('mergeStatus');
             const output = document.getElementById('mergeOutput');
             const formData = new FormData(this);
-            
+
             status.textContent = 'PROCESSING... Please wait...';
             status.style.color = 'orange';
             output.style.display = 'block';
             output.textContent = 'Starting merge process...\n';
-            
+
             fetch('/merge', {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json();
+                } else {
+                    return response.text().then(text => {
+                        throw new Error(`Received non-JSON response: ${text.substring(0, 100)}...`);
+                    });
+                }
+            })
             .then(data => {
                 if (data.success) {
-                    status.textContent = 'MERGE COMPLETED';
+                    status.textContent = 'MERGE COMPLETED SUCCESSFULLY';
                     status.style.color = 'green';
                     output.textContent = data.output;
                 } else {
