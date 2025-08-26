@@ -139,11 +139,13 @@ def merge_folder():
         return jsonify({'error': 'Admin authentication required'}), 403
     
     try:
-        data = request.get_json()
-        if not data:
-            folder_name = request.form.get('folder_name')
+        # Handle both JSON and form data
+        folder_name = None
+        if request.is_json:
+            data = request.get_json()
+            folder_name = data.get('folder_name') if data else None
         else:
-            folder_name = data.get('folder_name')
+            folder_name = request.form.get('folder_name')
             
         if not folder_name:
             return jsonify({'error': 'No folder specified'}), 400
