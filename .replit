@@ -16,3 +16,15 @@ deploymentTarget = "cloudrun"
 
 [objectStorage]
 defaultBucketID = "replit-objstore-90cdf83f-ad70-4b54-9f29-7f2870bcd963"
+
+[workflows]
+runButton = "Web Dashboard"
+
+[[workflows.workflow]]
+name = "Web Dashboard"
+author = 15297962
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python app.py"

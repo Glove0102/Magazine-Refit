@@ -1,0 +1,250 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PDF Translation Control Panel</title>
+    <style>
+        body {
+            font-family: "Courier New", monospace;
+            background-color: #ffffff;
+            color: #000000;
+            margin: 20px;
+            font-size: 12px;
+        }
+        .header {
+            border: 2px solid #000000;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        .section {
+            border: 1px solid #000000;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .section-title {
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #f0f0f0;
+            border: 2px outset #f0f0f0;
+            padding: 5px 15px;
+            font-family: "Courier New", monospace;
+            font-size: 11px;
+            cursor: pointer;
+            margin: 2px;
+        }
+        button:active {
+            border: 2px inset #f0f0f0;
+        }
+        select, input[type="text"] {
+            font-family: "Courier New", monospace;
+            font-size: 11px;
+            border: 2px inset #f0f0f0;
+            padding: 2px;
+            background-color: #ffffff;
+        }
+        .output {
+            border: 1px solid #000000;
+            background-color: #f8f8f8;
+            padding: 10px;
+            font-family: "Courier New", monospace;
+            font-size: 10px;
+            white-space: pre-wrap;
+            height: 200px;
+            overflow-y: scroll;
+            display: none;
+        }
+        .user-info {
+            font-size: 10px;
+            text-align: right;
+        }
+        .status {
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 10px 0;
+        }
+        td, th {
+            border: 1px solid #000000;
+            padding: 5px;
+            text-align: left;
+            font-size: 11px;
+        }
+        th {
+            background-color: #e0e0e0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div style="float: left;">
+            <h2>PDF TRANSLATION CONTROL PANEL v1.0</h2>
+            <p>System Status: <span style="color: green;">ONLINE</span></p>
+        </div>
+        <div class="user-info">
+            Logged in as: <strong>{{ user.name }}</strong><br>
+            User ID: {{ user.id }}<br>
+            <img src="{{ user.profile_image }}" width="32" height="32" style="vertical-align: middle;" />
+        </div>
+        <div style="clear: both;"></div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">TRANSLATE PDF TO CHINESE</div>
+        <form id="translateForm">
+            <table>
+                <tr>
+                    <td width="150">Select PDF File:</td>
+                    <td>
+                        <select name="pdf_file" id="pdfSelect" required>
+                            <option value="">-- SELECT PDF FILE --</option>
+                            {% for pdf in pdf_files %}
+                            <option value="{{ pdf }}">{{ pdf }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Action:</td>
+                    <td>
+                        <button type="submit">START TRANSLATION</button>
+                        <span style="margin-left: 20px; font-size: 10px;">
+                            Note: This will create individual page PDFs in Object Storage
+                        </span>
+                    </td>
+                </tr>
+            </table>
+        </form>
+        <div id="translateStatus" class="status"></div>
+        <div id="translateOutput" class="output"></div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">MERGE PDF PAGES</div>
+        <form id="mergeForm">
+            <table>
+                <tr>
+                    <td width="150">Select Folder:</td>
+                    <td>
+                        <select name="folder_name" id="folderSelect" required>
+                            <option value="">-- SELECT FOLDER --</option>
+                            {% for folder in folders %}
+                            <option value="{{ folder }}">{{ folder }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Action:</td>
+                    <td>
+                        <button type="submit">MERGE PAGES</button>
+                        <span style="margin-left: 20px; font-size: 10px;">
+                            Note: This will create a single merged PDF in the folder
+                        </span>
+                    </td>
+                </tr>
+            </table>
+        </form>
+        <div id="mergeStatus" class="status"></div>
+        <div id="mergeOutput" class="output"></div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">SYSTEM INFORMATION</div>
+        <table>
+            <tr><th>Property</th><th>Value</th></tr>
+            <tr><td>Available PDF Files</td><td>{{ pdf_files|length }}</td></tr>
+            <tr><td>Available Folders</td><td>{{ folders|length }}</td></tr>
+            <tr><td>Server Time</td><td id="serverTime"></td></tr>
+        </table>
+        <button onclick="location.reload()">REFRESH DATA</button>
+    </div>
+
+    <script>
+        // Update server time
+        function updateTime() {
+            document.getElementById('serverTime').textContent = new Date().toLocaleString();
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        // Handle translation form
+        document.getElementById('translateForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const status = document.getElementById('translateStatus');
+            const output = document.getElementById('translateOutput');
+            const formData = new FormData(this);
+            
+            status.textContent = 'PROCESSING... Please wait...';
+            status.style.color = 'orange';
+            output.style.display = 'block';
+            output.textContent = 'Starting translation process...\n';
+            
+            fetch('/translate', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    status.textContent = 'TRANSLATION COMPLETED';
+                    status.style.color = 'green';
+                    output.textContent = data.output;
+                } else {
+                    status.textContent = 'TRANSLATION FAILED';
+                    status.style.color = 'red';
+                    output.textContent = 'ERROR: ' + data.error;
+                }
+            })
+            .catch(error => {
+                status.textContent = 'SYSTEM ERROR';
+                status.style.color = 'red';
+                output.textContent = 'ERROR: ' + error.message;
+            });
+        });
+
+        // Handle merge form
+        document.getElementById('mergeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const status = document.getElementById('mergeStatus');
+            const output = document.getElementById('mergeOutput');
+            const formData = new FormData(this);
+            
+            status.textContent = 'PROCESSING... Please wait...';
+            status.style.color = 'orange';
+            output.style.display = 'block';
+            output.textContent = 'Starting merge process...\n';
+            
+            fetch('/merge', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    status.textContent = 'MERGE COMPLETED';
+                    status.style.color = 'green';
+                    output.textContent = data.output;
+                } else {
+                    status.textContent = 'MERGE FAILED';
+                    status.style.color = 'red';
+                    output.textContent = 'ERROR: ' + data.error;
+                }
+            })
+            .catch(error => {
+                status.textContent = 'SYSTEM ERROR';
+                status.style.color = 'red';
+                output.textContent = 'ERROR: ' + error.message;
+            });
+        });
+    </script>
+</body>
+</html>
