@@ -68,37 +68,45 @@ def admin_auth():
 @app.route('/translate', methods=['POST'])
 def translate_pdf():
     try:
+        print("DEBUG: Translation endpoint called")
         if not is_admin_authenticated(request):
+            print("DEBUG: Admin not authenticated")
             return jsonify({'error': 'Admin authentication required'}), 403
 
         pdf_file = request.form.get('pdf_file')
+        print(f"DEBUG: PDF file requested: {pdf_file}")
         if not pdf_file:
             return jsonify({'error': 'No PDF file specified'}), 400
 
         # Run the translation script
-        # Update the main.py configuration
-        with open('main.py', 'r') as f:
-            content = f.read()
+        try:
+            # Update the main.py configuration
+            with open('main.py', 'r') as f:
+                content = f.read()
 
-        # Replace the input_pdf value
-        lines = content.split('\n')
-        for i, line in enumerate(lines):
-            if line.startswith('input_pdf = '):
-                lines[i] = f'input_pdf = "{pdf_file}"'
-                break
+            # Replace the input_pdf value
+            lines = content.split('\n')
+            for i, line in enumerate(lines):
+                if line.startswith('input_pdf = '):
+                    lines[i] = f'input_pdf = "{pdf_file}"'
+                    break
 
-        with open('main.py', 'w') as f:
-            f.write('\n'.join(lines))
+            with open('main.py', 'w') as f:
+                f.write('\n'.join(lines))
 
-        # Run the translation
-        result = subprocess.run(['python', 'main.py'], 
-                              capture_output=True, text=True, timeout=300)
+            # Run the translation
+            result = subprocess.run(['python', 'main.py'], 
+                                  capture_output=True, text=True, timeout=300)
 
-        return jsonify({
-            'success': True,
-            'output': result.stdout,
-            'error': result.stderr if result.stderr else None
-        })
+            return jsonify({
+                'success': True,
+                'output': result.stdout,
+                'error': result.stderr if result.stderr else None
+            })
+        except FileNotFoundError:
+            return jsonify({'error': 'Translation script not found'}), 500
+        except PermissionError:
+            return jsonify({'error': 'Permission denied accessing files'}), 500
     except subprocess.TimeoutExpired:
         return jsonify({'error': 'Translation timed out (5 min limit)'}), 408
     except Exception as e:
