@@ -48,11 +48,18 @@ def dashboard():
 def translate_pdf():
     try:
         print("DEBUG: Translation endpoint called")
+        print(f"DEBUG: Content-Type: {request.content_type}")
+        print(f"DEBUG: Form data: {dict(request.form)}")
         
         # Check password directly
         password = request.form.get('password')
-        if not password or not verify_admin_password(password):
-            print("DEBUG: Invalid or missing password")
+        print(f"DEBUG: Password received: {'***' if password else 'None'}")
+        
+        if not password:
+            return jsonify({'error': 'No password provided'}), 400
+            
+        if not verify_admin_password(password):
+            print("DEBUG: Password verification failed")
             return jsonify({'error': 'Invalid admin password'}), 403
 
         pdf_file = request.form.get('pdf_file')
