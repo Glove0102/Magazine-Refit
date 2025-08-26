@@ -75,8 +75,7 @@ def translate_pdf():
         if not pdf_file:
             return jsonify({'error': 'No PDF file specified'}), 400
 
-    # Run the translation script
-    try:
+        # Run the translation script
         # Update the main.py configuration
         with open('main.py', 'r') as f:
             content = f.read()
