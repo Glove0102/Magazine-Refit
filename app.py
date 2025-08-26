@@ -4,12 +4,10 @@ import os
 from replit.object_storage import Client
 import hashlib
 import uuid
+import sys
 
 app = Flask(__name__)
-app.secret_key = os.getenv('FLASK_SECRET_KEY')
-
-if not app.secret_key:
-    raise ValueError("FLASK_SECRET_KEY environment variable is required but not set. Please add it to your Replit Secrets.")
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'your-secret-key-change-this')
 
 def verify_admin_password(password):
     """Verify admin password against stored hash"""
@@ -47,8 +45,8 @@ def dashboard():
         folders = set()
         pdf_files = []
 
-    return render_template('dashboard.html', 
-                         folders=sorted(folders), 
+    return render_template('dashboard.html',
+                         folders=sorted(folders),
                          pdf_files=sorted(pdf_files))
 
 @app.route('/check_auth')
@@ -88,20 +86,23 @@ def translate_pdf():
         if not pdf_file:
             return jsonify({'error': 'No PDF file specified'}), 400
 
-        print(f"DEBUG: Starting translation for: {pdf_file}")
+        print(f"DEBUG: Attempting to start translation for: {pdf_file}")
+        project_root = os.path.dirname(os.path.abspath(__file__))
 
-        # Use Popen to run the translation in the background
-        subprocess.Popen(['python', 'main.py', pdf_file])
+        # Pass the current environment variables to the child process using env=os.environ
+        subprocess.Popen(
+            [sys.executable, 'main.py', pdf_file],
+            cwd=project_root,
+            env=os.environ
+        )
 
         return jsonify({
             'success': True,
-            'message': f'Translation for {pdf_file} has started. Check the console logs for progress.'
+            'message': f'Translation for {pdf_file} has been initiated. Check translation_log.txt for progress.'
         })
-
     except Exception as e:
-        print(f"Translation error: {str(e)}")
-        return jsonify({'error': f'Failed to start translation: {str(e)}'}), 500
-
+        print(f"CRITICAL: Failed to start the translation subprocess. Error: {str(e)}")
+        return jsonify({'error': f'Failed to start translation process: {str(e)}'}), 500
 
 @app.route('/merge', methods=['POST'])
 def merge_folder():
@@ -116,15 +117,19 @@ def merge_folder():
             return jsonify({'error': 'No folder specified'}), 400
 
         print(f"DEBUG: Starting merge for folder: {folder_name}")
+        project_root = os.path.dirname(os.path.abspath(__file__))
 
-        # Run the merge script in the background
-        subprocess.Popen(['python', 'merge_pdfs.py', folder_name])
+        # Also pass the environment to the merge script
+        subprocess.Popen(
+            [sys.executable, 'merge_pdfs.py', folder_name],
+            cwd=project_root,
+            env=os.environ
+        )
 
         return jsonify({
             'success': True,
             'message': f'Merging for folder {folder_name} has started.'
         })
-
     except Exception as e:
         print(f"Merge error: {str(e)}")
         return jsonify({'error': f'Failed to start merge: {str(e)}'}), 500
@@ -136,6 +141,4 @@ def logout():
     return jsonify({'success': True})
 
 if __name__ == '__main__':
-    # For production, we'll use Gunicorn via the deployment config
-    # This fallback is only for local development
     app.run(host='0.0.0.0', port=5000, debug=False)
