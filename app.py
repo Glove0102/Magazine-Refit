@@ -153,4 +153,6 @@ def logout():
     return jsonify({'success': True})
 
 if __name__ == '__main__':
+    # For production, we'll use Gunicorn via the deployment config
+    # This fallback is only for local development
     app.run(host='0.0.0.0', port=5000, debug=False)
