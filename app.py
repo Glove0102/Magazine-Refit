@@ -6,7 +6,10 @@ import hashlib
 import uuid
 
 app = Flask(__name__)
-app.secret_key = os.getenv('FLASK_SECRET_KEY', 'your-secret-key-change-this')
+app.secret_key = os.getenv('FLASK_SECRET_KEY')
+
+if not app.secret_key:
+    raise ValueError("FLASK_SECRET_KEY environment variable is required but not set. Please add it to your Replit Secrets.")
 
 def verify_admin_password(password):
     """Verify admin password against stored hash"""
